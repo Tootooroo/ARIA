@@ -5,7 +5,10 @@ node_modules/
 
 # Expo
 .expo/
-dist/
+.expo-shared/
+.vscode/
+ios/
+android/
 web-build/
 expo-env.d.ts
 
@@ -17,6 +20,7 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.log
 
 # Metro
 .metro-health-check*
@@ -37,3 +41,4 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+.vercel
