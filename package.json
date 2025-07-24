@@ -47,12 +47,8 @@
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-<<<<<<< HEAD
     "zustand": "^5.0.6",
     "expo-dev-client": "~5.2.4"
-=======
-    "zustand": "^5.0.6"
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

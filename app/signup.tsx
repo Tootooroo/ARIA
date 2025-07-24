@@ -11,19 +11,13 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-<<<<<<< HEAD
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
 
 const { width, height } = Dimensions.get("window");
 
 const SignupScreen: React.FC = () => {
   const router = useRouter();
-<<<<<<< HEAD
   const insets = useSafeAreaInsets();
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,15 +39,10 @@ const SignupScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safe}>
-<<<<<<< HEAD
-=======
-      <View style={styles.background}>
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
       {/* Back arrow */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.push("/")}>
         <Ionicons name="chevron-back" size={28} color="#de7600" />
       </TouchableOpacity>
-<<<<<<< HEAD
       
       <View style={styles.background}>
 
@@ -118,71 +107,6 @@ const SignupScreen: React.FC = () => {
             <Text style={styles.footerText}>Need Help?</Text>
           </TouchableOpacity>
         </View>
-=======
-
-      {/* Header */}
-      <Text style={styles.header}>Sign up for ARIA</Text>
-
-      {/* Email/Password Inputs */}
-      <View style={styles.formGroup}>
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          {/* Email */}
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#888"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          {/* Password */}
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          {/* Sign Up Button */}
-          <TouchableOpacity style={styles.button} onPress={handleSignup}>
-            <Text style={styles.buttonText}>Create Account</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Or Divider */}
-        <View style={styles.orRow}>
-          <View style={styles.orLine} />
-          <Text style={styles.orText}>or</Text>
-          <View style={styles.orLine} />
-        </View>
-
-        {/* Sign up with Google */}
-        <TouchableOpacity
-          style={styles.googleButton}
-          activeOpacity={0.85}
-          onPress={handleGoogleSignUp}
-        >
-          <AntDesign name="google" size={26} color="#" />
-          <Text style={styles.googleText}>Sign up with Google</Text>
-        </TouchableOpacity>
-
-        <View style={styles.signUpPrompt}>
-          <Text style={styles.promptText}>Already have an account?</Text>
-          <TouchableOpacity onPress={() => router.push("/login")}>
-            <Text style={styles.signupText}> Log In</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={() => alert("Support coming soon!")}>
-            <Text style={styles.footerText}>Need Help?</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
     </SafeAreaView>
   );
 };
@@ -192,20 +116,12 @@ export default SignupScreen;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-<<<<<<< HEAD
     backgroundColor: "#FFB980", 
-=======
-    backgroundColor: "#FFB980", // your original background
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   background: {
     flex: 1,
     alignItems: "center",
-<<<<<<< HEAD
     justifyContent: "center",
-=======
-    justifyContent: "flex-start",
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
     paddingTop: 100,
   },
   backButton: {
@@ -214,23 +130,17 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 2,
   },
-<<<<<<< HEAD
   contentContainer: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 20,
     width: "100%",
   },
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   header: {
     fontSize: width * 0.1,
     fontWeight: "bold",
     marginBottom: 20,
-<<<<<<< HEAD
     marginTop: 20,
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
     color: "#de7600",
     alignSelf: "center",
     textShadowColor: "rgba(18, 17, 17, 0.23)",
@@ -263,11 +173,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-<<<<<<< HEAD
     marginTop: 120,
-=======
-    marginTop: 100,
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
     marginBottom: 10,
     alignSelf: "center",
     shadowColor: "#ffa842",

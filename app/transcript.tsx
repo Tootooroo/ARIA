@@ -21,13 +21,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-<<<<<<< HEAD
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-=======
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
 
 import { useRouter } from 'expo-router';
 import { useAuth } from '../lib/stayloggedin';
@@ -40,13 +34,8 @@ type ClearableInputProps = {
   value: string;
   onChangeText: (val: string) => void;
   placeholder?: string;
-<<<<<<< HEAD
   style?: any;
   inputStyle?: any;
-=======
-  inputStyle?: any;
-  style?: any;
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   onSubmitEditing?: () => void;
 };
 
@@ -117,7 +106,6 @@ export default function TranscriptPage() {
       const history = await getUserMemory(userId, 10000);
       setMessages(history);
     };
-<<<<<<< HEAD
     fetchHistory();
 
     // Set up polling every 2 seconds
@@ -126,10 +114,6 @@ export default function TranscriptPage() {
     }, 2000);
 
     return () => clearInterval(interval);
-=======
-
-    fetchHistory();
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   }, []);
 
   useEffect(() => {
@@ -137,10 +121,6 @@ export default function TranscriptPage() {
       const timeout = setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100); // Slight delay to wait for render
-<<<<<<< HEAD
-=======
-  
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
       return () => clearTimeout(timeout);
     }
   }, [messages]);
@@ -220,13 +200,7 @@ export default function TranscriptPage() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-<<<<<<< HEAD
       <SafeAreaView style={{ flex: 1 }}  edges={['left', 'right']}>
-=======
-      <SafeAreaView style={{ flex: 1 }}  
-      edges={['left', 'right']}
-    >
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -433,10 +407,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     zIndex: 10,
-<<<<<<< HEAD
-=======
-    paddingBottom: 0,
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   usericon: {
     width: 55,
@@ -456,7 +426,6 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-<<<<<<< HEAD
     marginHorizontal: 6,
     backgroundColor: '#fff8ee',
     borderRadius: 17,
@@ -465,15 +434,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#222',
     textAlignVertical: 'center',
-=======
-    marginHorizontal: 8,
-    backgroundColor: '#fff8ee',
-    borderRadius: 17,
-    height: 30,
-    paddingHorizontal: 12,
-    fontSize: 14,
-    color: '#222',
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   transcriptContainer: {
     flex: 1,

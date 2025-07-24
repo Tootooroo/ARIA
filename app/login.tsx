@@ -4,23 +4,15 @@ import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
-<<<<<<< HEAD
   ImageBackground,
   Platform,
-=======
-  Platform,
-  SafeAreaView,
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from "react-native";
-<<<<<<< HEAD
 import { SafeAreaView } from 'react-native-safe-area-context';
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
 import { useAuth } from "../lib/stayloggedin";
 
 const { width, height } = Dimensions.get("window");
@@ -53,32 +45,16 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-<<<<<<< HEAD
     <ImageBackground
       source={require("../assets/main_ui/BACKGROUND.png")}
       style={{ flex: 1 }}
       resizeMode="cover"
     >
       <SafeAreaView style={{ flex: 1 }}>
-=======
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.background}>
-        <Image
-          source={require("../assets/main_ui/Background_Gradient.png")}
-          style={styles.bgImage}
-          resizeMode="cover"
-        />
-        <Image
-          source={require("../assets/main_ui/aria_mouthopen.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
         <TouchableOpacity style={styles.backButton} onPress={() => router.push("/")}>
           <Ionicons name="chevron-back" size={28} color="#fff" />
         </TouchableOpacity>
 
-<<<<<<< HEAD
         {/* All content centered in a column */}
         <View style={styles.centerWrap}>
           <Image
@@ -154,73 +130,6 @@ const LoginScreen: React.FC = () => {
         </View>
       </SafeAreaView>
     </ImageBackground>
-=======
-        <Text style={styles.header}>Log in to ARIA</Text>
-
-        <View style={styles.formGroup}>
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#888"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              style={styles.inputPassword}
-              placeholder="Password"
-              placeholderTextColor="#888"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(prev => !prev)}>
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#888" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.checkboxContainer}>
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() => setStaySignedIn(prev => !prev)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.checkboxBox, staySignedIn && styles.checkboxBoxChecked]}>
-                {staySignedIn && <Ionicons name="checkmark" size={16} color="#fff" />}
-              </View>
-              <Text style={styles.checkboxLabel}>Stay signed in</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.signUpPrompt}>
-          <Text style={styles.promptText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push("/signup")}>
-            <Text style={styles.signupText}>Sign up</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity style={styles.LogInButton} activeOpacity={0.85} onPress={handleLogin}>
-          <Text style={styles.LogInText}>Log In</Text>
-        </TouchableOpacity>
-
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={() => alert("Support coming soon!")}>
-            <Text style={styles.footerText}>Need Help?</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   );
 };
 
@@ -229,23 +138,6 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-<<<<<<< HEAD
-=======
-    backgroundColor: "#fff",
-  },
-  background: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  bgImage: {
-    position: "absolute",
-    top: -65,
-    left: 0,
-    width,
-    height: height * 0.8,
-    zIndex: -1,
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   backButton: {
     position: "absolute",
@@ -253,7 +145,6 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 2,
   },
-<<<<<<< HEAD
   // The NEW central wrap: aligns everything in the center
   centerWrap: {
     flex: 1,
@@ -262,16 +153,11 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingTop: 44, // adjust as needed!
   },
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   logo: {
     width: 200,
     height: 200,
     marginTop: 70,
-<<<<<<< HEAD
     alignSelf: "center",
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   header: {
     fontSize: width * 0.1,
@@ -283,10 +169,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 8,
     letterSpacing: 1,
-<<<<<<< HEAD
     marginBottom: 10,
-=======
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
   formGroup: {
     width: width * 0.85,
@@ -371,11 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 25,
-<<<<<<< HEAD
     alignSelf: "flex-start",
-=======
-    alignSelf: "flex-start", // FIXED from "left"
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
     marginTop: 8,
     marginLeft: width / 4,
   },

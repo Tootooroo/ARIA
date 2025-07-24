@@ -70,7 +70,6 @@ export default function ChatScreen() {
   );  
 }
 
-<<<<<<< HEAD
 const ARIA_WIDTH = width * 1.2;
 const ARIA_HEIGHT = ARIA_WIDTH * 1.5;
 
@@ -95,20 +94,5 @@ const styles = StyleSheet.create({
   ariaImage: {
     width: ARIA_WIDTH,
     height: ARIA_HEIGHT,
-=======
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  characterWrap: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ariaImage: {
-    width: width * 1.2,
-    height: height / 1.5,
-    alignSelf: "center",
->>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
   },
 });
