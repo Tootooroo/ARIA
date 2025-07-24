@@ -5,6 +5,13 @@ node_modules/
 
 # Expo
 .expo/
+<<<<<<< HEAD
+=======
+.expo-shared/
+.vscode/
+ios/
+android/
+>>>>>>> 862bc7f87e41e1f44a0aaeab006e8682877e9525
 web-build/
 expo-env.d.ts
 
@@ -16,6 +23,7 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.log
 
 # Metro
 .metro-health-check*
