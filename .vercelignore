@@ -1,0 +1,14 @@
+# Ignore unnecessary dev stuff
+*.log
+.vscode/
+.expo/
+.git/
+node_modules/
+
+# Keep these for deployment
+!api/
+!api/chat.ts
+!package.json
+!package-lock.json
+!tsconfig.json
+!vercel.json
