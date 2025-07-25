@@ -23,7 +23,6 @@ const SignupScreen: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Your actual Google OAuth will need an external handler!
   const handleGoogleSignUp = () => {
     alert("Google sign up coming soon!");
   };

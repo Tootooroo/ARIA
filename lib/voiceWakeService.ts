@@ -9,9 +9,9 @@ const ACCESS_KEY = 'UOOuBrvoezmOrCsl79uqoaHa4w+S6A3WY637vwIdOd59AI+vrOtJZg==';
 
 export const initWakeWordDetection = async (
   onWakeWord: () => void,
-  wakeWordModelPath?: string // Path to your custom "Hey Aria" model
+  wakeWordModelPath?: string 
 ) => {
-  if (porcupineManager) return; // Already initialized
+  if (porcupineManager) return; 
 
   try {
     // Path to your .ppn model (put in assets directory and reference with `require`)
@@ -24,9 +24,9 @@ export const initWakeWordDetection = async (
     });
 
     porcupineManager = await PorcupineManager.fromKeywordPaths(
-      ACCESS_KEY, // 1. Access key
-      keywordPaths!, // 2. Keyword paths array
-      (keywordIndex: number) => { // 3. Detection callback
+      ACCESS_KEY, 
+      keywordPaths!,
+      (keywordIndex: number) => {
         console.log('[🚨 Hotword detected!]', keywordIndex);
         stopWakeWordDetection();
         onWakeWord();

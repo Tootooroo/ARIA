@@ -41,7 +41,7 @@ const LoginScreen: React.FC = () => {
       return;
     }
     setError("");
-    setLoggedIn(true); // this will trigger useEffect above
+    setLoggedIn(true);
   };
 
   return (
@@ -145,13 +145,12 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 2,
   },
-  // The NEW central wrap: aligns everything in the center
   centerWrap: {
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
     width: "100%",
-    paddingTop: 44, // adjust as needed!
+    paddingTop: 25,
   },
   logo: {
     width: 200,

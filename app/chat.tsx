@@ -26,7 +26,7 @@ export default function ChatScreen() {
     if (ariaTalking) {
       interval = setInterval(() => {
         setAriaFrame((prev) => (prev + 1) % ariaImages.length);
-      }, 180); // Adjust speed as you like
+      }, 180);
     } else {
       setAriaFrame(0);
     }
@@ -36,7 +36,6 @@ export default function ChatScreen() {
   }, [ariaTalking]);
 
   // Expose this function for anywhere you want Aria to "speak"
-  // (call it after you get an AI reply)
   const speakAndAnimate = (text: string) => {
     // Start animating
     setAriaTalking(true);
@@ -81,10 +80,8 @@ const styles = StyleSheet.create({
   },
   characterWrap: {
     position: "absolute",
-    left: (width - ARIA_WIDTH) / 2, // center horizontally
-    // Place the bottom of Aria a bit *above* the bottom, to sit on the branch
+    left: (width - ARIA_WIDTH) / 2,
     bottom: height * 0.03,
-    // The offset may need tiny adjustment for your exact art
     width: ARIA_WIDTH,
     height: ARIA_HEIGHT,
     alignItems: "center",

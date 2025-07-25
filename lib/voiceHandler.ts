@@ -4,7 +4,6 @@ import * as Speech from 'expo-speech';
 import { useRef } from 'react';
 import { useVoiceRecognition } from './useVoiceRecognition';
 
-//let response = '';
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
@@ -25,30 +24,27 @@ export const useVoiceFlow = (
       appendMessage({ role: 'assistant', content: '(thinking...)' });
 
       try {
-        // If you want full context, pass chat history instead of just user text!
         const aiReply = await sendMessageToOpenAI([{ role: 'user', content: text }]);
         
-        // Replace the "(thinking...)" with the actual reply if function provided
         if (replaceLastAssistantMessage) {
           replaceLastAssistantMessage({ role: 'assistant', content: aiReply });
         } else {
           appendMessage({ role: 'assistant', content: aiReply });
         }
 
-        useAriaStore.getState().setAriaTalking(true); // <-- Start mouth
+        useAriaStore.getState().setAriaTalking(true); 
 
-        // Speak out the response
         Speech.speak(aiReply, {
           rate: 1.0,
           onDone: () => {
-            useAriaStore.getState().setAriaTalking(false); // <-- Stop mouth
+            useAriaStore.getState().setAriaTalking(false);
             isProcessing.current = false;
-            startRecognition(); // Restart listening after speech finishes
+            startRecognition(); 
           },
           onError: () => {
-            useAriaStore.getState().setAriaTalking(false); // <-- Stop mouth
+            useAriaStore.getState().setAriaTalking(false); 
             isProcessing.current = false;
-            startRecognition(); // Still restart even if TTS failed
+            startRecognition(); 
           },
         });
       } catch (err) {
@@ -63,7 +59,7 @@ export const useVoiceFlow = (
             content: '⚠️ Error fetching reply',
           });
         }
-        useAriaStore.getState().setAriaTalking(false); // <-- Stop mouth on error!
+        useAriaStore.getState().setAriaTalking(false); 
         isProcessing.current = false;
         startRecognition();
       }

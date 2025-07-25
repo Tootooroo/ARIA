@@ -74,19 +74,21 @@ const WelcomeScreen: React.FC = () => {
     content: {
       flex: 1,
       width: "100%",
-      justifyContent: "space-between", // main: push top & bottom apart
+      justifyContent: "space-between",
     },
     top: {
       alignItems: "center",
       marginTop: height * 0,
     },
     logo: {
-      width: width * 0.75,     // Scales with screen size
-      height: height * 0.38,   // Scales with screen size
+      width: width * 0.75,
+      height: height * 0.38, 
       alignSelf: "center",
+      marginBottom: -60,
+      marginTop: 30,
     },
     header: {
-      fontSize: width * 0.20, // Responsive font size
+      fontSize: width * 0.20,
       fontWeight: "bold",
       color: "#fff",
       textShadowColor: "rgba(18, 17, 17, 0.23)",
@@ -101,7 +103,7 @@ const WelcomeScreen: React.FC = () => {
       textShadowRadius: 1,
     },
     buttonGroup: {
-      marginTop: height * 0.15,
+      marginTop: height * 0,
       width: "100%",
       alignItems: "center",
     },

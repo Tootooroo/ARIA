@@ -1,12 +1,15 @@
-import { sendMessageToOpenAI } from '@/lib/api'; // Import the helper
+// OpenAI
+import { sendMessageToOpenAI } from '@/lib/api';
 
-import type { ChatMessage } from '@/lib/memory'; // <-- import the type
+// Memory
+import type { ChatMessage } from '@/lib/memory';
 import {
   getUserMemory,
   storeAssistantReply,
   storeUserMessage,
 } from '@/lib/memory';
 
+// React imports
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -23,10 +26,16 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Authentication 
 import { useRouter } from 'expo-router';
 import { useAuth } from '../lib/stayloggedin';
 
+// Main UI page
 import { useAriaStore } from '@/lib/ariatalking';
+
+// User icon button & More icon button
+import SettingsModal from "./SettingsModal";
+import UserProfileModal from "./UserProfileModal";
 
 const userId = 'demo-user'; // Replace with your logic for real user ID
 
@@ -37,6 +46,8 @@ type ClearableInputProps = {
   style?: any;
   inputStyle?: any;
   onSubmitEditing?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 function ClearableInput({
@@ -46,6 +57,8 @@ function ClearableInput({
   style,
   inputStyle,
   onSubmitEditing,
+  onFocus,
+  onBlur,
 }: ClearableInputProps) {
   return (
     <View style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', position: 'relative' }, style]}>
@@ -58,6 +71,8 @@ function ClearableInput({
         clearButtonMode={Platform.OS === 'ios' ? 'while-editing' : 'never'}
         onSubmitEditing={onSubmitEditing}
         returnKeyType="done"
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
       {Platform.OS === 'android' && value.length > 0 && (
         <TouchableOpacity
@@ -88,42 +103,46 @@ export default function TranscriptPage() {
   const [showAllMatches, setShowAllMatches] = useState(false); 
   const insets = useSafeAreaInsets();
   const flatListRef = React.useRef<FlatList<ChatMessage>>(null);
+  const [showProfile, setShowProfile] = useState(false); // User Icon
+  const [showSettings, setShowSettings] = useState(false); // Settings
+  const [isAtBottom, setIsAtBottom] = useState(true); // Move screen to bottom
+  const [searchFocused, setSearchFocused] = useState(false); // Make list invisible
 
-  const scrollToBottom = () => {
-    flatListRef.current?.scrollToEnd({ animated: true });
-  };
-  
-  // Optional: Redirect if not logged in
+  // Redirected if not logged in (fix)
   useEffect(() => {
     if (!loading && !isLoggedIn) {
       router.replace('/login');
     }
   }, [isLoggedIn, loading]);
 
-  // 🆕 On mount, load ALL chat history from Firebase!
+  // Load all history from firebase
   useEffect(() => {
+    let interval: any;
     const fetchHistory = async () => {
       const history = await getUserMemory(userId, 10000);
       setMessages(history);
     };
     fetchHistory();
 
-    // Set up polling every 2 seconds
-    const interval = setInterval(() => {
-      fetchHistory();
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+    // Only poll when search is empty
+    if (!search.trim()) {
+      interval = setInterval(() => {
+        fetchHistory();
+      }, 2000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [search]);
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (isAtBottom && !search.trim() && messages.length > 0) {
       const timeout = setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100); // Slight delay to wait for render
+      }, 100);
       return () => clearTimeout(timeout);
     }
-  }, [messages]);
+  }, [messages, search]);  
   
   // When search changes, reset "show all"
   useEffect(() => {
@@ -143,7 +162,7 @@ export default function TranscriptPage() {
   const MAX_VISIBLE = 10;
   const visibleIndexes = showAllMatches ? searchIndexes : searchIndexes.slice(0, MAX_VISIBLE);
 
-  // 🆕 Send message, store to Firebase, recall ALL history
+  // Send message, store to Firebase, recall ALL history
   const handleSend = async () => {
     if (!input.trim() || sending) return;
     setLoading(true);
@@ -151,18 +170,19 @@ export default function TranscriptPage() {
     // 1. Store user message in Firebase
     await storeUserMessage(userId, input);
 
-    // 2. Load ALL chat history from Firebase (nothing is forgotten!)
+    // 2. Load ALL chat history from Firebase
     const fullHistory = await getUserMemory(userId, 10000); // Increase as needed
 
     // 3. Append "thinking..." for UI feedback
     setMessages([...fullHistory, { role: 'assistant', content: '(thinking...)' }]);
     setInput('');
 
-    // 👉 START ANIMATION GLOBALLY:
+    // START ANIMATION GLOBALLY:
     useAriaStore.getState().setAriaTalking(true);
+    setIsAtBottom(true); // Pull screen to bottom
 
     try {
-      // 4. Send entire chat to OpenAI!
+      // 4. Send entire chat to OpenAI
       const aiReply = await sendMessageToOpenAI(fullHistory.concat([{ role: 'user', content: input }]));
 
       // 5. Store AI reply in Firebase
@@ -177,7 +197,7 @@ export default function TranscriptPage() {
         { role: 'assistant', content: '⚠️ Something went wrong. Please try again.' },
       ]);
     }
-    // 👉 STOP ANIMATION after reply
+    // STOP ANIMATION after reply
     useAriaStore.getState().setAriaTalking(false);
     setLoading(false);
   };
@@ -208,7 +228,7 @@ export default function TranscriptPage() {
       >
         {/* Top Bar */}
         <View style={[styles.topBar, {paddingTop: insets.top }]}>
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity onPress={() => setShowProfile(true)}>
             <Image source={require('@/assets/main_ui/User_Icon.png')} style={styles.usericon} />
           </TouchableOpacity>
           <View style={styles.searchInputWrap}>
@@ -217,23 +237,25 @@ export default function TranscriptPage() {
               onChangeText={setSearch}
               placeholder="Search chat history..."
               inputStyle={styles.searchBar}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
             />
           </View>
-          <TouchableOpacity onPress={() => {}}>
+          <TouchableOpacity onPress={() => setShowSettings(true)}>
             <Image source={require('@/assets/main_ui/More_icon.png')} style={styles.moreicon} />
           </TouchableOpacity>
         </View>
 
         {/* Search Results: Jump to matching messages */}
-        {search.trim() && searchIndexes.length > 0 && (
+        {search.trim() && searchIndexes.length > 0 && searchFocused && (
           <View
             style={{
               position: 'absolute',
-              top: insets.top + 55, // below topBar
+              top: insets.top + 55, 
               left: 0,
               right: 0,
               maxHeight: 400,
-              zIndex: 30,
+              zIndex: 2,
             }}
           >
             <ScrollView
@@ -242,14 +264,16 @@ export default function TranscriptPage() {
                 flexWrap: 'wrap',
                 paddingHorizontal: 10,
                 paddingBottom: 10,
+                alignItems: 'flex-start',
               }}
+              horizontal={false}
               keyboardShouldPersistTaps="handled"
             >
               {visibleIndexes.map(idx => (
                 <TouchableOpacity
                   key={idx}
                   onPress={() => {
-                    flatListRef.current?.scrollToIndex({ index: idx, animated: true });
+                    flatListRef.current?.scrollToIndex({ index: idx, animated: true, viewPosition: 0.7 });
                   }}
                   style={{
                     backgroundColor: '#ffd98e',
@@ -257,10 +281,21 @@ export default function TranscriptPage() {
                     paddingHorizontal: 8,
                     paddingVertical: 3,
                     margin: 2,
+                    minWidth: 60,
+                    maxWidth: 110,
+                    alignItems: 'center',
                   }}
                 >
-                  <Text style={{ color: '#de7600', fontWeight: 'bold', fontSize: 13 }}>
-                    {messages[idx].content.length > 22
+                  <Text
+                    style={{
+                      color: '#de7600',
+                      fontWeight: 'bold',
+                      fontSize: 12, 
+                      flexShrink: 1,
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    >{messages[idx].content.length > 22
                       ? messages[idx].content.slice(0, 22) + '...'
                       : messages[idx].content}
                   </Text>
@@ -344,6 +379,14 @@ export default function TranscriptPage() {
                 contentContainerStyle={{ paddingBottom: 12 }}
                 keyboardShouldPersistTaps="handled"
                 onScrollToIndexFailed={handleScrollToIndexFailed}
+                onScroll={event => {
+                  const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+                  const paddingToBottom = 60; 
+                  setIsAtBottom(
+                    contentOffset.y + layoutMeasurement.height >= contentSize.height - paddingToBottom
+                  );
+                }}
+                scrollEventThrottle={100}
               />
             )}
           </View>
@@ -363,7 +406,7 @@ export default function TranscriptPage() {
               height: 40,
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 20,
+              zIndex: 2,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.15,
@@ -392,9 +435,19 @@ export default function TranscriptPage() {
               source={require('@/assets/main_ui/Chat_Icon.png')}
               style={[styles.chatIcon, loading && { opacity: 0.5 }, { tintColor: '#fff' }]}
             />
-            {/* ^ Optionally add tintColor to force color */}
           </TouchableOpacity>
         </View>
+        <UserProfileModal
+          visible={showProfile}
+          onClose={() => setShowProfile(false)}
+          userName="Ricky"
+          userEmail="demoemail123@gmail.com"
+          onLogout={() => alert("Logged out!")}
+        />
+        <SettingsModal
+          visible={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
     </ImageBackground>
@@ -406,7 +459,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    zIndex: 10,
+    zIndex: 1,
   },
   usericon: {
     width: 55,
