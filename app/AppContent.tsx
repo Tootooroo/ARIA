@@ -1,16 +1,27 @@
+import { useUser } from '@clerk/clerk-expo';
+import { ActivityIndicator, View } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import { useAuth } from '../lib/stayloggedin';
+import { useUserSync } from '../lib/userSync';
 import ChatScreen from './chat';
 import WelcomeScreen from './index';
 import TranscriptScreen from './transcript';
 
 export default function AppContent() {
-  const { isLoggedIn, loading } = useAuth();
+  const { isSignedIn, isLoaded } = useUser();
+  useUserSync();
 
-  if (loading) return null;
+  console.log("🔍 AppContent - isSignedIn:", isSignedIn, "isLoaded:", isLoaded);
+
+  if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
-    !isLoggedIn ? (
+    !isSignedIn ? (
       <WelcomeScreen />
     ) : (
       <PagerView style={{ flex: 1 }} initialPage={0}>

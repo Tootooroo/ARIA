@@ -10,7 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.aicompanionapp"
+      "bundleIdentifier": "com.anonymous.aicompanionapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to your camera so you can take photos for your profile.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library so you can choose profile photos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs to save photos to your photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,7 +40,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
@@ -44,7 +51,8 @@
       "router": {},
       "eas": {
         "projectId": "23f73863-d50d-4fa3-85b8-7d3f784039bd"
-      }
+      },
+      "clerkPublishableKey": "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY"
     }
   }
 }

@@ -1,9 +1,9 @@
 import { useAriaStore } from '@/lib/ariatalking';
+import { useUser } from '@clerk/clerk-expo';
 import * as Speech from 'expo-speech';
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, ImageBackground, SafeAreaView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAuth } from "../lib/stayloggedin";
 
 // Animation assets
 const ariaImages = [
@@ -14,7 +14,7 @@ const ariaImages = [
 const { width, height } = Dimensions.get("window");
 
 export default function ChatScreen() {
-  const { isLoggedIn, loading } = useAuth();
+  const { isSignedIn, isLoaded } = useUser();
   const insets = useSafeAreaInsets();
   const ariaTalking = useAriaStore((s) => s.ariaTalking);
   const setAriaTalking = useAriaStore((s) => s.setAriaTalking);
@@ -48,7 +48,7 @@ export default function ChatScreen() {
     });
   };
 
-  if (loading || !isLoggedIn) return null;
+  if (!isLoaded || !isSignedIn) return null;
 
   return (
     <ImageBackground

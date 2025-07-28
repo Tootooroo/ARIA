@@ -1,5 +1,6 @@
+import { useAuth } from '@clerk/clerk-expo';
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dimensions,
   Image,
@@ -12,12 +13,22 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
 const { width, height } = Dimensions.get("window");
 
 const WelcomeScreen: React.FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { signOut, isSignedIn } = useAuth();
+
+  //  ←  force-logout on mount so every cold start goes through login
+  useEffect(() => {
+    if (isSignedIn) signOut();                        // clear session
+  }, []);                                             // run only once
+
+  // if we arrive here while signed-in, jump to the app pages
+  useEffect(() => {
+    if (isSignedIn) router.replace('/AppContent');
+  }, [isSignedIn]);
 
   return (
     <ImageBackground

@@ -1,6 +1,7 @@
+import { useSignIn } from '@clerk/clerk-expo';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dimensions,
   Image,
@@ -13,13 +14,12 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from "../lib/stayloggedin";
 
 const { width, height } = Dimensions.get("window");
 
 const LoginScreen: React.FC = () => {
-  const { isLoggedIn, loading, setLoggedIn } = useAuth();
-  const [staySignedIn, setStaySignedIn] = useState(false);
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
@@ -28,20 +28,45 @@ const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect to /home after login
-  useEffect(() => {
-    if (!loading && isLoggedIn) {
-      router.replace("/AppContent");
-    }
-  }, [isLoggedIn, loading]);
+  const handleLogin = async () => {
+    if (!isLoaded) return;
 
-  const handleLogin = () => {
     if (!email || !password) {
       setError("Please enter your email and password.");
       return;
     }
+
+    setLoading(true);
     setError("");
-    setLoggedIn(true);
+    
+    try {
+      const res = await signIn.create({
+        identifier: email.toLowerCase().trim(),
+        password,
+      });
+
+      if (res.status === 'complete') {
+        await setActive({ session: res.createdSessionId });
+        router.replace('/chat');          // <-- go right to the chat page
+        return;
+      }
+    } catch (err: any) {
+      const code = err?.errors?.[0]?.code;
+      const msg  = err?.errors?.[0]?.message || 'Login failed. Try again.';
+      if (code === 'session_exists') {
+        router.replace('/chat');        // already signed-in → straight to chat
+        return;
+      }
+      if (code === 'form_identifier_not_found') {
+        setError('Account not found. Please sign up first.');
+      } else if (code === 'form_password_incorrect') {
+        setError('Incorrect password. Please try again.');
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -73,9 +98,13 @@ const LoginScreen: React.FC = () => {
               placeholder="Email"
               placeholderTextColor="#888"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(t) => {
+                setEmail(t);
+                setError('');
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
+              editable={!loading}
             />
 
             <View style={styles.passwordWrapper}>
@@ -85,7 +114,11 @@ const LoginScreen: React.FC = () => {
                 placeholderTextColor="#888"
                 secureTextEntry={!showPassword}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  setError('');
+                }}
+                editable={!loading}
               />
               <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(prev => !prev)}>
                 <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#888" />
@@ -95,11 +128,11 @@ const LoginScreen: React.FC = () => {
             <View style={styles.checkboxContainer}>
               <TouchableOpacity
                 style={styles.checkbox}
-                onPress={() => setStaySignedIn(prev => !prev)}
+                onPress={() => setLoading(prev => !prev)}
                 activeOpacity={0.8}
               >
-                <View style={[styles.checkboxBox, staySignedIn && styles.checkboxBoxChecked]}>
-                  {staySignedIn && <Ionicons name="checkmark" size={16} color="#fff" />}
+                <View style={[styles.checkboxBox, loading && styles.checkboxBoxChecked]}>
+                  {loading && <Ionicons name="checkmark" size={16} color="#fff" />}
                 </View>
                 <Text style={styles.checkboxLabel}>Stay signed in</Text>
               </TouchableOpacity>
@@ -117,8 +150,13 @@ const LoginScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.LogInButton} activeOpacity={0.85} onPress={handleLogin}>
-            <Text style={styles.LogInText}>Log In</Text>
+          <TouchableOpacity
+            style={[styles.LogInButton, loading && { opacity: 0.6 }]}
+            activeOpacity={0.85}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text style={styles.LogInText}>{loading ? 'Logging In…' : 'Log In'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -145,6 +183,21 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 2,
   },
+  signOutButton: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 48 : 28,
+    right: 10,
+    zIndex: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  signOutText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
   centerWrap: {
     flex: 1,
     alignItems: "center",
@@ -169,6 +222,31 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
     letterSpacing: 1,
     marginBottom: 10,
+  },
+  statusContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  statusText: {
+    color: "#22c55e",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  goToAppButton: {
+    backgroundColor: "#22c55e",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  goToAppText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
   },
   formGroup: {
     width: width * 0.85,

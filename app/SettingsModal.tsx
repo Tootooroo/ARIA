@@ -5,6 +5,8 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,7 +15,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AboutContent from './AboutContent';
+// About app page
+import AboutContent from './Settings/AboutContent';
+
+// Privacy statement page
+import PrivacyStatement from './Settings/PrivacyStatement';
+
+// Future updates page
+import Updates from './Settings/Updates';
 
 const { width } = Dimensions.get("window");
 
@@ -31,7 +40,29 @@ export default function SettingsModal({
   const slideAnim = useRef(new Animated.Value(-width)).current;
   const [display, setDisplay] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [updatesOpen, setUpdatesOpen] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const openAppSettings = () => {
+    Alert.alert(
+      "Manage Notifications",
+      "To enable or disable notifications, you'll need to adjust your settings for Aria in your device's Settings app. Tap 'Open Settings' to continue.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Open Settings",
+          onPress: () => {
+            if (Platform.OS === 'ios') {
+              Linking.openURL('app-settings:');
+            } else {
+              Linking.openSettings();
+            }
+          }
+        }
+      ]
+    );
+  };  
 
   // Animate in/out logic
   useEffect(() => {
@@ -51,7 +82,9 @@ export default function SettingsModal({
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (finished) setDisplay(false);
-        setAboutOpen(false); 
+        setAboutOpen(false);
+        setPrivacyOpen(false);
+        setUpdatesOpen(false); 
       });
     }
   }, [visible]);
@@ -83,12 +116,12 @@ export default function SettingsModal({
             }
           ]}
         >
-            {/* About page (with left back button and proper scroll) */}
-          {aboutOpen ? (
+          {/* ABOUT PAGE MODAL */}
+          {aboutOpen && (
             <>
               <View style={{ flexDirection: "row", alignItems: "center", minHeight: 50 }}>
                 <TouchableOpacity
-                  style={[styles.backButton, { left: 0, right: undefined }]}
+                  style={[styles.backButton, { left: undefined, right: 14, marginBottom: 20 }]}
                   onPress={() => setAboutOpen(false)}
                 >
                   <Ionicons
@@ -97,128 +130,198 @@ export default function SettingsModal({
                     color="#fff"
                   />
                 </TouchableOpacity>
-                <Text style={[styles.title, { flex: 1, textAlign: "center", marginLeft: -28 }]}>
+                <Text style={[styles.title, { flex: 1, textAlign: "center", marginLeft: -12, marginBottom: 28 }]}>
                   About This App
                 </Text>
               </View>
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ paddingBottom: 60 }}
-                showsVerticalScrollIndicator={false}
-              >
-                <AboutContent noTitle />
+              <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
+                <AboutContent />
               </ScrollView>
             </>
-          ) : (
+          )}
+
+          {/* PRIVACY PAGE MODAL */}
+          {privacyOpen && (
             <>
-                {/* Settings topbar */}
-                <View style={styles.headerRow}>
-
-                {/* Pill/oval for the SETTINGS title */}
-                <View style={styles.pillHeader}>
-                    <Text style={styles.pillHeaderText}>SETTINGS</Text>
-                </View>
-
-                {/* Back chevron on the right */}
-                <TouchableOpacity style={styles.backButton} onPress={onClose}>
-                    <Ionicons name="chevron-forward" size={28} color="#fff" />
+              <View style={{ flexDirection: "row", alignItems: "center", minHeight: 50 }}>
+                <TouchableOpacity
+                  style={[styles.backButton, { left: undefined, right: 14, marginBottom: 20 }]}
+                  onPress={() => setPrivacyOpen(false)}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={28}
+                    color="#fff"
+                  />
                 </TouchableOpacity>
-                </View>
-            
-                <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
+                <Text style={[styles.title2, { flex: 1, textAlign: "center", marginLeft: -12, marginBottom: 28 }]}>
+                  Privacy Statement
+                </Text>
+              </View>
+              <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
+                <PrivacyStatement />
+              </ScrollView>
+            </>
+          )}
 
+          {/* FUTURE UPDATES MODAL */}
+          {updatesOpen && (
+            <>
+              <View style={{ flexDirection: "row", alignItems: "center", minHeight: 50 }}>
+                <TouchableOpacity
+                  style={[styles.backButton, { left: undefined, right: 14, marginBottom: 20 }]}
+                  onPress={() => setUpdatesOpen(false)}
+                >
+                  <Ionicons
+                    name="chevron-back"
+                    size={28}
+                    color="#fff"
+                  />
+                </TouchableOpacity>
+                <Text style={[styles.title2, { flex: 1, textAlign: "center", marginLeft: -12, marginBottom: 28 }]}>
+                  Upcoming Updates
+                </Text>
+              </View>
+              <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
+                <Updates />
+              </ScrollView>
+            </>
+          )}
+
+          {/* MAIN SETTINGS PAGE */}
+          {!aboutOpen && !privacyOpen && !updatesOpen &&(
+            <>
+              <View style={styles.headerRow}>
+                <View style={styles.pillHeader}>
+                  <Text style={styles.pillHeaderText}>SETTINGS</Text>
+                </View>
+                <TouchableOpacity style={styles.backButton} onPress={onClose}>
+                  <Ionicons name="chevron-forward" size={28} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
+                
                 {/* Appearance */}
                 <Text style={styles.sectionTitle}>Appearance</Text>
                 <View style={styles.glassCard}>
-                <TouchableOpacity style={[
-                    styles.menuItem,
-                    { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
-                    ]} 
-                    onPress={() => Alert.alert("Theme", "Theme switching coming soon!")}>
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                    ]}
+                    onPress={() => Alert.alert("Theme", "Theme switching coming soon!")}
+                  >
                     <Text style={styles.menuText}>Theme</Text>
                     <Feather name="moon" size={18} color="#FFA842" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Background", "Change background coming soon!")}>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Background", "Change background coming soon!")}>
                     <Text style={styles.menuText}>Background</Text>
                     <Feather name="image" size={18} color="#FFA842" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Character", "Change character coming soon!")}>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Character", "Change character coming soon!")}>
                     <Text style={styles.menuText}>Character</Text>
                     <Feather name="smile" size={18} color="#FFA842" />
-                </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>
-            
+                
                 {/* Notifications */}
                 <Text style={styles.sectionTitle}>Notifications</Text>
                 <View style={styles.glassCard}>
-                <TouchableOpacity style={[
-                    styles.menuItem,
-                    { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
                     ]}
-                    onPress={() => Alert.alert("Notifications", "This will open system settings for notifications.")}>
+                    onPress={openAppSettings}
+                  >
                     <Text style={styles.menuText}>Manage Notifications</Text>
                     <Feather name="bell" size={18} color="#FFA842" />
-                </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>
-            
+                
                 {/* App Preferences */}
                 <Text style={styles.sectionTitle}>App Preferences</Text>
                 <View style={styles.glassCard}>
-                <TouchableOpacity style={[
-                    styles.menuItem,
-                    { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
-                    ]}  
-                    onPress={() => Alert.alert("Vibration / Haptics", "Toggle vibration/haptics when Aria responds coming soon!")}>
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                    ]}
+                    onPress={() => Alert.alert("Vibration / Haptics", "Toggle vibration/haptics when Aria responds coming soon!")}
+                  >
                     <Text style={styles.menuText}>Vibration / Haptics</Text>
                     <Feather name="smartphone" size={18} color="#FFA842" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Compact Mode", "Reduce animations / compact mode coming soon!")}>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Compact Mode", "Reduce animations / compact mode coming soon!")}>
                     <Text style={styles.menuText}>Compact Mode</Text>
                     <Feather name="minimize" size={18} color="#FFA842" />
-                </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>
-            
+                
                 {/* Language */}
                 <Text style={styles.sectionTitle}>Language</Text>
                 <View style={styles.glassCard}>
-                <TouchableOpacity style={[
-                    styles.menuItem,
-                    { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
                     ]}
-                    onPress={() => Alert.alert("Language", "Language selection coming soon!")}>
+                    onPress={() => Alert.alert("Language", "Language selection coming soon!")}
+                  >
                     <Text style={styles.menuText}>App Language</Text>
                     <Feather name="globe" size={18} color="#FFA842" />
-                </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>
-            
+                
                 {/* About */}
                 <Text style={styles.sectionTitle}>About</Text>
                 <View style={styles.glassCard}>
-                <TouchableOpacity style={[
-                    styles.menuItem,
-                    { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
                     ]}
-                    onPress={() => setAboutOpen(true)}>
+                    onPress={() => setAboutOpen(true)}
+                  >
                     <Text style={styles.menuText}>About This App</Text>
                     <Feather name="info" size={18} color="#FFA842" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Privacy Statement", "Opens privacy policy (link or modal)")}>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                    ]}
+                    onPress={() => setPrivacyOpen(true)}
+                  >
                     <Text style={styles.menuText}>Privacy Statement</Text>
                     <Feather name="shield" size={18} color="#FFA842" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Feedback", "Feedback / rate coming soon!")}>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => Linking.openURL("https://forms.gle/2HDunoTcANmKc4Lf6")}
+                  >
                     <Text style={styles.menuText}>Feedback & Rate App</Text>
                     <Feather name="star" size={18} color="#FFA842" />
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.menuItem,
+                      { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
+                    ]}
+                    onPress={() => setUpdatesOpen(true)}
+                  >
+                    <Text style={styles.menuText}>Upcoming Updates</Text>
+                    <Feather name="shield" size={18} color="#FFA842" />
+                  </TouchableOpacity>
                 </View>
-            </ScrollView>
+              </ScrollView>
             </>
           )}
-          </Animated.View>        
-        )}
-        </View>
-      );
-    }
+        </Animated.View>
+      )}
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   overlayBackground: {
@@ -278,6 +381,15 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "bold",
     fontSize: 32,
+    color: "#fff",
+    marginBottom: 18,
+    alignSelf: "center",
+    marginTop: 6,
+    letterSpacing: 1.4,
+  },
+  title2: {
+    fontWeight: "bold",
+    fontSize: 30,
     color: "#fff",
     marginBottom: 18,
     alignSelf: "center",

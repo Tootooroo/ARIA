@@ -27,8 +27,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Authentication 
+import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../lib/stayloggedin';
 
 // Main UI page
 import { useAriaStore } from '@/lib/ariatalking';
@@ -36,8 +36,6 @@ import { useAriaStore } from '@/lib/ariatalking';
 // User icon button & More icon button
 import SettingsModal from "./SettingsModal";
 import UserProfileModal from "./UserProfileModal";
-
-const userId = 'demo-user'; // Replace with your logic for real user ID
 
 type ClearableInputProps = {
   value: string;
@@ -94,7 +92,7 @@ function ClearableInput({
 }
 
 export default function TranscriptPage() {
-  const { isLoggedIn, loading } = useAuth();
+  const { isSignedIn, isLoaded, user } = useUser();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -108,12 +106,13 @@ export default function TranscriptPage() {
   const [isAtBottom, setIsAtBottom] = useState(true); // Move screen to bottom
   const [searchFocused, setSearchFocused] = useState(false); // Make list invisible
 
-  // Redirected if not logged in (fix)
+  // Get the current user's Clerk ID
+  const userId = user?.id || 'anonymous';
+
+  // Redirect if not logged-in
   useEffect(() => {
-    if (!loading && !isLoggedIn) {
-      router.replace('/login');
-    }
-  }, [isLoggedIn, loading]);
+    if (isLoaded && !isSignedIn) router.replace('/login');
+  }, [isLoaded, isSignedIn]);
 
   // Load all history from firebase
   useEffect(() => {
@@ -161,6 +160,7 @@ export default function TranscriptPage() {
   // Only top N visible if not showAllMatches
   const MAX_VISIBLE = 10;
   const visibleIndexes = showAllMatches ? searchIndexes : searchIndexes.slice(0, MAX_VISIBLE);
+  const CONTEXT_WINDOW_SIZE = 20;
 
   // Send message, store to Firebase, recall ALL history
   const handleSend = async () => {
@@ -172,6 +172,7 @@ export default function TranscriptPage() {
 
     // 2. Load ALL chat history from Firebase
     const fullHistory = await getUserMemory(userId, 10000); // Increase as needed
+    const contextHistory = fullHistory.slice(-CONTEXT_WINDOW_SIZE);
 
     // 3. Append "thinking..." for UI feedback
     setMessages([...fullHistory, { role: 'assistant', content: '(thinking...)' }]);
@@ -182,25 +183,30 @@ export default function TranscriptPage() {
     setIsAtBottom(true); // Pull screen to bottom
 
     try {
-      // 4. Send entire chat to OpenAI
-      const aiReply = await sendMessageToOpenAI(fullHistory.concat([{ role: 'user', content: input }]));
+      // 4. Send last N messages (like ChatGPT context window)
+    const reply = await sendMessageToOpenAI([
+      ...contextHistory,
+      { role: "user", content: input },
+    ]);
 
-      // 5. Store AI reply in Firebase
-      await storeAssistantReply(userId, aiReply);
+    let replyContent = reply;
 
-      // 6. Load updated history and update UI
-      const updatedHistory = await getUserMemory(userId, 10000);
-      setMessages(updatedHistory);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: 'assistant', content: '⚠️ Something went wrong. Please try again.' },
-      ]);
-    }
-    // STOP ANIMATION after reply
-    useAriaStore.getState().setAriaTalking(false);
-    setLoading(false);
-  };
+    // 5. Store AI reply in Firebase
+    await storeAssistantReply(userId, replyContent);
+
+    // 6. Load updated history and update UI
+    const updatedHistory = await getUserMemory(userId, 10000);
+    setMessages(updatedHistory);
+  } catch (error) {
+    setMessages((prev) => [
+      ...prev.slice(0, -1),
+      { role: 'assistant', content: '⚠️ Something went wrong. Please try again.' },
+    ]);
+  }
+  // STOP ANIMATION after reply
+  useAriaStore.getState().setAriaTalking(false);
+  setLoading(false);
+};
 
   // Optional: handle scroll to index failed (for search jump)
   const handleScrollToIndexFailed = (info: any) => {
@@ -212,7 +218,7 @@ export default function TranscriptPage() {
     }, 300);
   };
 
-  if (loading || !isLoggedIn) return null;
+  if (!isLoaded || !isSignedIn) return null;
 
   return (
     <ImageBackground
@@ -430,10 +436,10 @@ export default function TranscriptPage() {
             placeholder="Type a message..."
             inputStyle={styles.input}
           />
-          <TouchableOpacity onPress={handleSend} disabled={loading} style={styles.chatIconButton}>
+          <TouchableOpacity onPress={handleSend} disabled={sending} style={styles.chatIconButton}>
             <Image
               source={require('@/assets/main_ui/Chat_Icon.png')}
-              style={[styles.chatIcon, loading && { opacity: 0.5 }, { tintColor: '#fff' }]}
+              style={[styles.chatIcon, sending && { opacity: 0.5 }, { tintColor: '#fff' }]}
             />
           </TouchableOpacity>
         </View>

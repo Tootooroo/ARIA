@@ -1,9 +1,24 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Animated, Dimensions, Easing, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Animated,
+  Dimensions,
+  Easing,
+  Image,
+  Modal,
+  View as RNView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get("window");
+const POPOVER_WIDTH = 180;
 
 type Props = {
   visible: boolean;
@@ -25,6 +40,14 @@ export default function UserProfileModal({
   const slideAnim = useRef(new Animated.Value(-width)).current;
   const [display, setDisplay] = useState(false);
   const insets = useSafeAreaInsets();
+
+  // Avatar state
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatarPickerVisible, setAvatarPickerVisible] = useState(false);
+  const [popoverPos, setPopoverPos] = useState<{ x: number, y: number } | null>(null);
+
+  // Avatar ref for measurement
+  const avatarRef = useRef<RNView | null>(null);
 
   // Animate in/out logic
   useEffect(() => {
@@ -48,6 +71,63 @@ export default function UserProfileModal({
     }
   }, [visible]);
 
+  // Camera picker
+  const pickFromCamera = async () => {
+    setAvatarPickerVisible(false);
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Camera permission is required.');
+      return;
+    }
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+    if (!result.canceled && result.assets && result.assets[0].uri) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  };  
+
+  // Gallery picker
+  const pickFromGallery = async () => {
+    setAvatarPickerVisible(false);
+    let result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+    if (!result.canceled && result.assets && result.assets[0].uri) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  };
+
+  // Files picker (expo-document-picker v11+)
+  const pickFromFiles = async () => {
+    setAvatarPickerVisible(false);
+    let result = await DocumentPicker.getDocumentAsync({
+      type: ['image/*'],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+    // If user picked a file
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  };
+
+  // Open popover with perfect alignment
+  const openAvatarPicker = () => {
+    if (avatarRef.current) {
+      avatarRef.current.measureInWindow((x, y, w, h) => {
+        setPopoverPos({ x: x + w / 2, y: y + h }); // centerX, bottomY
+        setAvatarPickerVisible(true);
+      });
+    } else {
+      setAvatarPickerVisible(true);
+    }
+  };
+
   // No render if not visible
   if (!display) return null;
 
@@ -61,6 +141,55 @@ export default function UserProfileModal({
           onPress={onClose}
         />
       )}
+
+      {/* Avatar Picker Modal */}
+      <Modal
+        visible={avatarPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAvatarPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.pickerOverlay}
+          activeOpacity={1}
+          onPress={() => setAvatarPickerVisible(false)}
+        >
+          {popoverPos && (
+            <View
+              style={[
+                styles.avatarPopover,
+                {
+                  position: "absolute",
+                  top: popoverPos.y + 6, // 6 px below avatar
+                  left: Math.max(popoverPos.x - POPOVER_WIDTH / 2, 16), // prevent overflow
+                  width: POPOVER_WIDTH,
+                },
+              ]}
+              pointerEvents="box-none"
+            >
+              {/* Arrow triangle */}
+              <View style={styles.arrowDown} />
+              <View style={styles.avatarPickerBox}>
+                <TouchableOpacity onPress={pickFromCamera} style={styles.pickerButton}>
+                  <Feather name="camera" size={20} color="#de7600" />
+                  <Text style={styles.pickerText}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={pickFromGallery} style={styles.pickerButton}>
+                  <Feather name="image" size={20} color="#de7600" />
+                  <Text style={styles.pickerText}>Choose from Gallery</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={pickFromFiles} style={styles.pickerButton}>
+                  <Feather name="folder" size={20} color="#de7600" />
+                  <Text style={styles.pickerText}>Upload from Files</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setAvatarPickerVisible(false)} style={{alignSelf: 'center', padding: 7}}>
+                  <Text style={{ color: "#F38D91", fontWeight: 'bold', fontSize: 16 }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </TouchableOpacity>
+      </Modal>
 
       {/* 2. Modal (fully interactive) */}
       {visible && (
@@ -82,10 +211,23 @@ export default function UserProfileModal({
           </TouchableOpacity>
           {/* User card sits to the right of arrow */}
           <View style={styles.userCard}>
-            <TouchableOpacity style={styles.avatar} onPress={() => Alert.alert("Change Avatar", "Avatar change coming soon!")}>
-              <Text style={styles.avatarText}>
-                {(userName && userName.length > 0 ? userName[0] : "?").toUpperCase()}
-              </Text>
+              <TouchableOpacity
+                ref={avatarRef}
+                style={styles.avatar}
+                onPress={openAvatarPicker}
+                activeOpacity={0.82}
+              >
+              {avatarUri ? (
+                <Image
+                  source={{ uri: avatarUri }}
+                  style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: "#ececec" }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.avatarText}>
+                  {(userName && userName.length > 0 ? userName[0] : "?").toUpperCase()}
+                </Text>
+              )}
               <Feather name="camera" size={14} color="#fff" style={{ position: 'absolute', bottom: 3, right: 5 }} />
             </TouchableOpacity>
             <View style={styles.userText}>
@@ -187,6 +329,56 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.15)",
     zIndex: 2,
+  },
+  pickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.20)",
+    zIndex: 5,
+  },
+  avatarPopover: {
+    alignItems: "center",
+    zIndex: 5,
+    minWidth: 100,
+  },
+  arrowDown: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 16,
+    borderRightWidth: 16,
+    borderBottomWidth: 18,
+    borderStyle: 'solid',
+    backgroundColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: "#fff",
+    marginBottom: -6,
+    alignSelf: "center",
+    zIndex: 10,
+
+  },
+  avatarPickerBox: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 4,
+    alignItems: "stretch",
+    minWidth: 100,
+    shadowColor: "#000",
+    shadowOpacity: 0.14,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 6,
+    paddingLeft: 8,
+  },
+  pickerText: {
+    marginLeft: 10,
+    color: "#222",
+    fontSize: 12,
+    fontWeight: "600"
   },
   container: {
     position: "absolute",

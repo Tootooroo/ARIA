@@ -1,7 +1,9 @@
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Dimensions,
   Platform,
   SafeAreaView,
@@ -16,25 +18,279 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const { width, height } = Dimensions.get("window");
 
 const SignupScreen: React.FC = () => {
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const { isSignedIn, signOut } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
-  const handleGoogleSignUp = () => {
-    alert("Google sign up coming soon!");
+  const handleGoogleSignUp = async () => {
+    Alert.alert("Not Implemented", "Google sign up coming soon!");
+    // Implement with Clerk OAuth if you wish
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
+    if (!isLoaded) {
+      console.log("❌ Clerk not loaded yet");
+      return;
+    }
+
+    // Check if user is already signed in
+    if (isSignedIn) {
+      Alert.alert(
+        "Already Signed In", 
+        "You're already signed in. Would you like to sign out and create a new account?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Sign Out", 
+            onPress: async () => {
+              await signOut();
+              setError("");
+            }
+          }
+        ]
+      );
+      return;
+    }
+
+    if (!signUp) {
+      console.log("❌ SignUp object is null");
+      setError("Authentication not initialized. Please restart the app.");
+      return;
+    }
+
+    console.log("✅ Clerk loaded, signUp object exists");
+
     if (!email || !password) {
       setError("Please enter your email and password.");
       return;
     }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    setLoading(true);
     setError("");
-    router.push("/login");
+    
+    try {
+      console.log("🔐 Creating signup with email:", email.toLowerCase().trim());
+      console.log("🔐 Password length:", password.length);
+      
+      const result = await signUp.create({
+        emailAddress: email.toLowerCase().trim(),
+        password,
+      });
+
+      console.log("📋 Signup result status:", result.status);
+      console.log("📋 Full signup result:", JSON.stringify(result, null, 2));
+
+      if (result.status === 'missing_requirements') {
+        console.log("📧 Preparing email verification");
+        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+        setVerifying(true);
+        Alert.alert("Check Your Email", `We sent a verification code to ${email}`);
+      } else if (result.status === 'complete') {
+        console.log("✅ Signup complete immediately");
+        await setActive({ session: result.createdSessionId });
+        Alert.alert("Welcome!", "Account created successfully!", [
+          { text: "Continue", onPress: () => router.replace("/") }
+        ]);
+      }
+    } catch (err: any) {
+      console.error("❌ Signup error:", JSON.stringify(err, null, 2));
+      
+      if (err.errors && err.errors.length > 0) {
+        const errorCode = err.errors[0].code;
+        const errorMessage = err.errors[0].message;
+        
+        console.log("Error code:", errorCode);
+        
+        switch (errorCode) {
+          case 'form_password_pwned':
+            setError("Please use a different, more unique password.");
+            break;
+          case 'form_identifier_exists':
+            setError("An account with this email already exists. Try logging in instead.");
+            break;
+          case 'form_password_validation_failed':
+            setError("Password too weak. Try a longer password with mixed characters.");
+            break;
+          default:
+            setError(errorMessage || "Signup failed. Please try again.");
+        }
+      } else {
+        setError("Signup failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleVerification = async () => {
+    if (!isLoaded || !code.trim()) {
+      setError("Please enter the verification code.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    
+    try {
+      console.log("📧 Attempting verification with code:", code);
+      console.log("📧 Current signUp status before verification:", signUp?.status);
+      
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: code.trim(),
+      });
+
+      console.log("📋 Verification result status:", completeSignUp.status);
+      console.log("📋 Full verification result:", JSON.stringify(completeSignUp, null, 2));
+
+      if (completeSignUp.status === 'complete') {
+        console.log("✅ Verification successful, setting active session");
+        console.log("✅ Session ID:", completeSignUp.createdSessionId);
+        
+        await setActive({ session: completeSignUp.createdSessionId });
+        
+        Alert.alert("Success!", "Account verified and created successfully!", [
+          { text: "Continue", onPress: () => router.replace("/") }
+        ]);
+      } else {
+        console.log("❌ Verification incomplete, status:", completeSignUp.status);
+        console.log("❌ Verification object:", JSON.stringify(completeSignUp.verifications, null, 2));
+        setError(`Verification incomplete. Status: ${completeSignUp.status}`);
+      }
+    } catch (err: any) {
+      console.error("❌ Verification error:", JSON.stringify(err, null, 2));
+      
+      if (err.errors && err.errors.length > 0) {
+        const errorCode = err.errors[0].code;
+        const errorMessage = err.errors[0].message;
+        
+        console.log("❌ Verification error code:", errorCode);
+        
+        if (errorCode === 'verification_already_verified') {
+          console.log("🔄 Email already verified, checking current signup status...");
+          
+          // Check if the signup is actually complete
+          try {
+            console.log("🔍 Current signUp object:", JSON.stringify(signUp, null, 2));
+            
+            if (signUp?.status === 'complete' && signUp?.createdSessionId) {
+              console.log("✅ Found complete signup, setting session");
+              await setActive({ session: signUp.createdSessionId });
+              Alert.alert("Welcome!", "Account created successfully!", [
+                { text: "Continue", onPress: () => router.replace("/") }
+              ]);
+              return;
+            } else {
+              console.log("❌ Signup not complete despite verification");
+              Alert.alert(
+                "Verification Issue", 
+                "Your email is verified but account creation is incomplete. Please try signing up again or contact support.",
+                [
+                  { text: "Try Again", onPress: () => router.replace("/signup") },
+                  { text: "Go to Login", onPress: () => router.replace("/login") }
+                ]
+              );
+              return;
+            }
+          } catch (sessionError) {
+            console.error("❌ Session error:", sessionError);
+            setError("Account verification completed but couldn't sign you in. Please try logging in.");
+          }
+        } else {
+          switch (errorCode) {
+            case 'form_code_incorrect':
+              setError("Incorrect verification code. Please try again.");
+              break;
+            case 'verification_expired':
+              setError("Verification code expired. Please request a new one.");
+              break;
+            default:
+              setError(errorMessage || "Verification failed. Please try again.");
+          }
+        }
+      } else {
+        setError("Verification failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!signUp) return;
+    
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      Alert.alert("Code Sent", "A new verification code has been sent to your email.");
+    } catch (err: any) {
+      console.error("Resend error:", err);
+      Alert.alert("Error", "Failed to resend code. Please try again.");
+    }
+  };
+
+  if (verifying) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <TouchableOpacity style={styles.backButton} onPress={() => setVerifying(false)}>
+          <Ionicons name="chevron-back" size={28} color="#de7600" />
+        </TouchableOpacity>
+        
+        <View style={styles.background}>
+          <View style={styles.contentContainer}>
+            <Text style={styles.header}>Verify Email</Text>
+            <Text style={styles.verifyText}>
+              We sent a 6-digit code to {email}. Enter it below:
+            </Text>
+            
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Enter 6-digit code"
+              placeholderTextColor="#888"
+              value={code}
+              onChangeText={setCode}
+              keyboardType="number-pad"
+              maxLength={6}
+              autoCapitalize="none"
+              editable={!loading}
+            />
+            
+            <TouchableOpacity 
+              style={[styles.button, (loading || !code.trim()) && { opacity: 0.6 }]} 
+              onPress={handleVerification}
+              disabled={loading || !code.trim()}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Verifying..." : "Verify Email"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.resendButton}
+              onPress={handleResendCode}
+              disabled={loading}
+            >
+              <Text style={styles.resendText}>Resend Code</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -53,24 +309,44 @@ const SignupScreen: React.FC = () => {
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder="Email address"
               placeholderTextColor="#888"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                setError("");
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
+              editable={!loading}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#888"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                placeholder="Password (8+ characters)"
+                placeholderTextColor="#888"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setError("");
+                }}
+                editable={!loading}
+              />
+              <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(prev => !prev)}>
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#888" />
+              </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleSignup}>
-              <Text style={styles.buttonText}>Create Account</Text>
+            <TouchableOpacity 
+              style={[styles.button, loading && { opacity: 0.6 }]} 
+              onPress={handleSignup}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Creating Account..." : "Create Account"}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -146,6 +422,23 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     letterSpacing: 1,
   },
+  passwordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 28,
+    marginBottom: 12,
+  },
+  eyeIcon: {
+    padding: 12,
+  },
+  verifyText: {
+    fontSize: width * 0.04,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
   formGroup: {
     width: width * 0.85,
     marginTop: 2,
@@ -187,6 +480,38 @@ const styles = StyleSheet.create({
     fontSize: width * 0.058,
     letterSpacing: 0.5,
   },
+  resendButton: {
+    marginTop: 15,
+  },
+  resendText: {
+    color: "#de7600",
+    fontSize: width * 0.035,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  signUpPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    alignSelf: "flex-start",
+    marginTop: 20,
+    marginLeft: width / 4,
+  },
+  promptText: {
+    color: "#444",
+    fontSize: width * 0.03,
+    fontWeight: "500",
+    textShadowColor: "rgba(18,17,17,0.08)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  signupText: {
+    color: "#444",
+    fontSize: width * 0.03,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+    marginLeft: 10,
+  },
   orRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -227,29 +552,6 @@ const styles = StyleSheet.create({
     fontSize: width * 0.049,
     marginLeft: 13,
     letterSpacing: 0.3,
-  },
-  signUpPrompt: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    alignSelf: "flex-start", // FIXED from "left"
-    marginTop: 20,
-    marginLeft: width / 4,
-  },
-  promptText: {
-    color: "#444",
-    fontSize: width * 0.03,
-    fontWeight: "500",
-    textShadowColor: "rgba(18,17,17,0.08)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  signupText: {
-    color: "#444",
-    fontSize: width * 0.03,
-    fontWeight: "bold",
-    letterSpacing: 0.5,
-    marginLeft: 10,
   },
   errorText: {
     color: "#B40020",

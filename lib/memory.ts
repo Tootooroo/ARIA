@@ -14,6 +14,7 @@ export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: number;
+  userId?: string;
 };
 
 // --- STORE USER MESSAGE ---
@@ -24,6 +25,7 @@ export async function storeUserMessage(userId: string, content: string) {
       role: 'user',
       content,
       timestamp: Date.now(),
+      userId,
     }
   );
 }
@@ -36,6 +38,7 @@ export async function storeAssistantReply(userId: string, content: string) {
       role: 'assistant',
       content,
       timestamp: Date.now(),
+      userId,
     }
   );
 }
@@ -57,5 +60,19 @@ export async function getUserMemory(userId: string, limit = 10): Promise<ChatMes
       role: data.role as 'user' | 'assistant',
       content: String(data.content),
       timestamp: Number(data.timestamp),
+      userId: String(data.userId),
     }));
+}
+
+// --- CREATE USER PROFILE IN FIREBASE ---
+export async function createUserProfile(userId: string, userData: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: number;
+}) {
+  await addDoc(collection(db, 'users'), {
+    clerkId: userId,
+    ...userData,
+  });
 }
