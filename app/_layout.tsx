@@ -46,7 +46,45 @@ export default function RootLayout() {
       <ClerkLoaded>
         <View style={{ flex: 1 }}>
           <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-            <Stack screenOptions={{ headerShown: false }} />
+            <Stack 
+              screenOptions={{ 
+                headerShown: false,
+                animation: 'slide_from_right',
+                gestureEnabled: true,
+                animationTypeForReplace: 'push',
+              }}
+            >
+              <Stack.Screen 
+                name="index" 
+                options={{ 
+                  animation: 'fade',
+                  animationDuration: 300 
+                }} 
+              />
+              <Stack.Screen 
+                name="login" 
+                options={{ 
+                  animation: 'slide_from_right',
+                  animationDuration: 350,
+                  gestureEnabled: true 
+                }} 
+              />
+              <Stack.Screen 
+                name="signup" 
+                options={{ 
+                  animation: 'slide_from_right', 
+                  animationDuration: 350,
+                  gestureEnabled: true 
+                }} 
+              />
+              <Stack.Screen 
+                name="AppContent" 
+                options={{ 
+                  animation: 'slide_from_bottom',
+                  animationDuration: 400 
+                }} 
+              />
+            </Stack>
           </ThemeProvider>
           <StatusBar style="auto" />
         </View>

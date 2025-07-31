@@ -15,6 +15,12 @@ export const useVoiceRecognition = ({ onResult, onError }: Props) => {
   const isStarted = useRef(false);
   const isMounted = useRef(true);
 
+  // Guard if Voice module isn't available
+  const hasVoice = typeof Voice !== 'undefined' && Voice !== null;
+  if (!hasVoice) {
+    console.warn('[useVoiceRecognition] Voice module not loaded');
+  }
+
   // Handler for results
   const handleSpeechResults = useCallback(
     (event: SpeechResultsEvent) => {
@@ -31,13 +37,14 @@ export const useVoiceRecognition = ({ onResult, onError }: Props) => {
     (e: SpeechErrorEvent) => {
       if (!isMounted.current) return;
       console.error('[❌ Voice Error]:', e);
-      if (onError) onError(e);
+      onError?.(e);
     },
     [onError]
   );
 
   useEffect(() => {
     isMounted.current = true;
+    if (!hasVoice) return;
 
     const onSpeechStart = (_: SpeechStartEvent) => {
       console.log('[🔛 Speech Started]');
@@ -49,41 +56,62 @@ export const useVoiceRecognition = ({ onResult, onError }: Props) => {
       isStarted.current = false;
     };
 
-    // Attach listeners
-    Voice.onSpeechStart = onSpeechStart;
-    Voice.onSpeechResults = handleSpeechResults;
-    Voice.onSpeechError = handleSpeechError;
-    Voice.onSpeechEnd = onSpeechEnd;
+    try {
+      Voice.onSpeechStart = onSpeechStart;
+      Voice.onSpeechResults = handleSpeechResults;
+      Voice.onSpeechError = handleSpeechError;
+      Voice.onSpeechEnd = onSpeechEnd;
+    } catch (e) {
+      console.warn('[useVoiceRecognition] Failed to attach Voice listeners', e);
+    }
 
-    // Cleanup on unmount
     return () => {
       isMounted.current = false;
-      Voice.destroy().then(Voice.removeAllListeners);
       isStarted.current = false;
+      if (!hasVoice) return;
+      try {
+        // Only try if Voice is an object and not null
+        if (Voice && typeof Voice.removeAllListeners === 'function') {
+          Voice.removeAllListeners();
+        }
+      } catch (e) {
+        console.warn('[useVoiceRecognition] Failed to remove listeners', e);
+      }
+      try {
+        if (Voice && typeof Voice.destroy === 'function') {
+          Voice.destroy();
+        }
+      } catch (e) {
+        console.warn('[useVoiceRecognition] Failed to destroy Voice', e);
+      }
     };
-  }, [handleSpeechResults, handleSpeechError]);
+  }, [handleSpeechResults, handleSpeechError, hasVoice]);
 
-  const startRecognition = async () => {
+  const startRecognition = useCallback(async () => {
+    if (!hasVoice) return;
     if (isStarted.current) return;
     try {
       await Voice.start('en-US');
-      isStarted.current = true;
       console.log('[🎤 Listening...]');
+      isStarted.current = true;
     } catch (e) {
       console.error('[⚠️ Failed to start recognition]:', e);
       isStarted.current = false;
     }
-  };
+  }, [hasVoice]);
 
-  const stopRecognition = async () => {
+  const stopRecognition = useCallback(async () => {
+    if (!hasVoice) return;
+    if (!isStarted.current) return;
     try {
       await Voice.stop();
-      isStarted.current = false;
       console.log('[🛑 Stopped Listening]');
     } catch (e) {
       console.error('[⚠️ Failed to stop recognition]:', e);
+    } finally {
+      isStarted.current = false;
     }
-  };
+  }, [hasVoice]);
 
   return { startRecognition, stopRecognition };
 };

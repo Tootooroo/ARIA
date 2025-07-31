@@ -1,3 +1,5 @@
+import { createUserProfile } from "@/lib/memory";
+import { isUsernameAppropriate } from "@/lib/profanityFilter";
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -23,6 +25,7 @@ const SignupScreen: React.FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +35,7 @@ const SignupScreen: React.FC = () => {
   const [error, setError] = useState("");
 
   const handleGoogleSignUp = async () => {
-    Alert.alert("Not Implemented", "Google sign up coming soon!");
+    Alert.alert("Hang tight, Coming Soon!");
     // Implement with Clerk OAuth if you wish
   };
 
@@ -69,8 +72,15 @@ const SignupScreen: React.FC = () => {
 
     console.log("✅ Clerk loaded, signUp object exists");
 
-    if (!email || !password) {
-      setError("Please enter your email and password.");
+    if (!username || !email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    // Validate username
+    const usernameValidation = isUsernameAppropriate(username);
+    if (!usernameValidation.isValid) {
+      setError(usernameValidation.reason || "Invalid username.");
       return;
     }
 
@@ -102,8 +112,23 @@ const SignupScreen: React.FC = () => {
       } else if (result.status === 'complete') {
         console.log("✅ Signup complete immediately");
         await setActive({ session: result.createdSessionId });
+
+        // Create user profile with username
+        try {
+          await createUserProfile(result.createdUserId!, {
+            email: email.toLowerCase().trim(),
+            username: username.toLowerCase().trim(),
+            displayName: username.trim(),
+            createdAt: Date.now(),
+          });
+          console.log("✅ User profile created with username");
+        } catch (profileError) {
+          console.error("❌ Failed to create user profile:", profileError);
+          // Don't block signup for profile creation failure
+        }
+        
         Alert.alert("Welcome!", "Account created successfully!", [
-          { text: "Continue", onPress: () => router.replace("/") }
+          { text: "Continue", onPress: () => router.replace("/AppContent") }
         ]);
       }
     } catch (err: any) {
@@ -162,8 +187,22 @@ const SignupScreen: React.FC = () => {
         
         await setActive({ session: completeSignUp.createdSessionId });
         
+        // Create user profile with username
+        try {
+          await createUserProfile(completeSignUp.createdUserId!, {
+            email: email.toLowerCase().trim(),
+            username: username.toLowerCase().trim(),
+            displayName: username.trim(),
+            createdAt: Date.now(),
+          });
+          console.log("✅ User profile created with username after verification");
+        } catch (profileError) {
+          console.error("❌ Failed to create user profile:", profileError);
+          // Don't block signup for profile creation failure
+        }
+        
         Alert.alert("Success!", "Account verified and created successfully!", [
-          { text: "Continue", onPress: () => router.replace("/") }
+          { text: "Continue", onPress: () => router.replace("/AppContent") }
         ]);
       } else {
         console.log("❌ Verification incomplete, status:", completeSignUp.status);
@@ -189,8 +228,23 @@ const SignupScreen: React.FC = () => {
             if (signUp?.status === 'complete' && signUp?.createdSessionId) {
               console.log("✅ Found complete signup, setting session");
               await setActive({ session: signUp.createdSessionId });
+              
+              // Create user profile with username
+              try {
+                await createUserProfile(signUp.createdUserId!, {
+                  email: email.toLowerCase().trim(),
+                  username: username.toLowerCase().trim(),
+                  displayName: username.trim(),
+                  createdAt: Date.now(),
+                });
+                console.log("✅ User profile created with username (already verified case)");
+              } catch (profileError) {
+                console.error("❌ Failed to create user profile:", profileError);
+                // Don't block signup for profile creation failure
+              }
+              
               Alert.alert("Welcome!", "Account created successfully!", [
-                { text: "Continue", onPress: () => router.replace("/") }
+                { text: "Continue", onPress: () => router.replace("/AppContent") }
               ]);
               return;
             } else {
@@ -307,6 +361,28 @@ const SignupScreen: React.FC = () => {
 
           <View style={styles.formGroup}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            
+            {/* Username field */}
+            <View style={styles.usernameContainer}>
+              <Text style={styles.usernamePrefix}>@</Text>
+              <TextInput
+                style={[styles.input, styles.usernameInput]}
+                placeholder="username"
+                placeholderTextColor="#888"
+                value={username}
+                onChangeText={(text) => {
+                  // Clean username: only alphanumeric and underscore, lowercase
+                  const cleanUsername = text.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                  setUsername(cleanUsername);
+                  setError("");
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+                maxLength={20}
+              />
+            </View>
+            
             <TextInput
               style={styles.input}
               placeholder="Email address"
@@ -404,6 +480,7 @@ const styles = StyleSheet.create({
     top: Platform.OS === "ios" ? 48 : 28,
     left: 10,
     zIndex: 2,
+    paddingTop: 10,
   },
   contentContainer: {
     flex: 1,
@@ -458,6 +535,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.10,
     shadowRadius: 8,
   },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "#fff",
+    borderRadius: 28,
+    marginBottom: 12,
+    paddingLeft: width * 0.045,
+    elevation: 1.5,
+    shadowColor: "#e4c2a6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+  },
+  usernamePrefix: {
+    fontSize: width * 0.04,
+    fontWeight: "bold",
+    color: "#de7600",
+    marginRight: 4,
+  },
+  usernameInput: {
+    flex: 1,
+    marginBottom: 0,
+    paddingLeft: 0,
+    backgroundColor: 'transparent',
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   button: {
     width: width * 0.75,
     height: 50,
@@ -465,7 +569,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 120,
+    marginTop: 70,
     marginBottom: 10,
     alignSelf: "center",
     shadowColor: "#ffa842",
@@ -492,10 +596,10 @@ const styles = StyleSheet.create({
   signUpPrompt: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 2,
     alignSelf: "flex-start",
-    marginTop: 20,
-    marginLeft: width / 4,
+    marginTop: 18,
+    marginLeft: width / 5,
   },
   promptText: {
     color: "#444",
@@ -515,7 +619,7 @@ const styles = StyleSheet.create({
   orRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 8,
     alignSelf: "center",
   },
   orLine: {

@@ -1,8 +1,9 @@
 import { sendMessageToOpenAI } from '@/lib/api';
 import { useAriaStore } from '@/lib/ariatalking';
 import * as Speech from 'expo-speech';
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useVoiceRecognition } from './useVoiceRecognition';
+import { startWakeWordDetection } from './voiceWakeService';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -26,11 +27,15 @@ export const useVoiceFlow = (
       try {
         const aiReply = await sendMessageToOpenAI([{ role: 'user', content: text }]);
         
+        const replyMsg: ChatMessage = { role: 'assistant', content: aiReply };
         if (replaceLastAssistantMessage) {
-          replaceLastAssistantMessage({ role: 'assistant', content: aiReply });
+          replaceLastAssistantMessage(replyMsg);
         } else {
-          appendMessage({ role: 'assistant', content: aiReply });
+          appendMessage(replyMsg);
         }
+
+        // Stop recognition before speaking
+        await stopRecognition();
 
         useAriaStore.getState().setAriaTalking(true); 
 
@@ -39,42 +44,40 @@ export const useVoiceFlow = (
           onDone: () => {
             useAriaStore.getState().setAriaTalking(false);
             isProcessing.current = false;
-            startRecognition(); 
+            startWakeWordDetection();
           },
           onError: () => {
             useAriaStore.getState().setAriaTalking(false); 
             isProcessing.current = false;
-            startRecognition(); 
+            startWakeWordDetection();
           },
         });
       } catch (err) {
+        const warning: ChatMessage = { role: 'assistant', content: '⚠️ Error fetching reply' };
         if (replaceLastAssistantMessage) {
-          replaceLastAssistantMessage({
-            role: 'assistant',
-            content: '⚠️ Error fetching reply',
-          });
+          replaceLastAssistantMessage(warning);
         } else {
-          appendMessage({
-            role: 'assistant',
-            content: '⚠️ Error fetching reply',
-          });
+          appendMessage(warning);
         }
-        useAriaStore.getState().setAriaTalking(false); 
+        // Clean up
+        await stopRecognition();
+        useAriaStore.getState().setAriaTalking(false);
         isProcessing.current = false;
-        startRecognition();
+        startWakeWordDetection();
       }
     },
   });
 
-  const startVoiceFlow = async () => {
+  // Memoize start/stop to stable identities
+  const startVoiceFlow = useCallback(async () => {
     isProcessing.current = false;
     await startRecognition();
-  };
+  }, [startRecognition]);
 
-  const stopVoiceFlow = async () => {
+  const stopVoiceFlow = useCallback(async () => {
     await stopRecognition();
     isProcessing.current = false;
-  };
+  }, [stopRecognition]);
 
   return { startVoiceFlow, stopVoiceFlow };
 };

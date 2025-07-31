@@ -6,7 +6,9 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -26,6 +28,7 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -69,6 +72,15 @@ const LoginScreen: React.FC = () => {
     }
   };
 
+  // CHANGE: Fix back navigation to slide from left
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   return (
     <ImageBackground
       source={require("../assets/main_ui/BACKGROUND.png")}
@@ -76,138 +88,138 @@ const LoginScreen: React.FC = () => {
       resizeMode="cover"
     >
       <SafeAreaView style={{ flex: 1 }}>
+        {/* BACK BUTTON */}
         <TouchableOpacity style={styles.backButton} onPress={() => router.push("/")}>
-          <Ionicons name="chevron-back" size={28} color="#fff" />
-        </TouchableOpacity>
+            <Ionicons name="chevron-back" size={28} color="#fff" />
+          </TouchableOpacity>
 
-        {/* All content centered in a column */}
-        <View style={styles.centerWrap}>
-          <Image
-            source={require("../assets/main_ui/aria_mouthopen.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-
-          <Text style={styles.header}>Log in to ARIA</Text>
-
-          <View style={styles.formGroup}>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#888"
-              value={email}
-              onChangeText={(t) => {
-                setEmail(t);
-                setError('');
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              editable={!loading}
-            />
-
-            <View style={styles.passwordWrapper}>
-              <TextInput
-                style={styles.inputPassword}
-                placeholder="Password"
-                placeholderTextColor="#888"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={(t) => {
-                  setPassword(t);
-                  setError('');
-                }}
-                editable={!loading}
-              />
-              <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(prev => !prev)}>
-                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#888" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.checkboxContainer}>
-              <TouchableOpacity
-                style={styles.checkbox}
-                onPress={() => setLoading(prev => !prev)}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.checkboxBox, loading && styles.checkboxBoxChecked]}>
-                  {loading && <Ionicons name="checkmark" size={16} color="#fff" />}
-                </View>
-                <Text style={styles.checkboxLabel}>Stay signed in</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.signUpPrompt}>
-            <Text style={styles.promptText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/signup")}>
-              <Text style={styles.signupText}>Sign up</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.LogInButton, loading && { opacity: 0.6 }]}
-            activeOpacity={0.85}
-            onPress={handleLogin}
-            disabled={loading}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+            
+          <ScrollView 
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.LogInText}>{loading ? 'Logging In…' : 'Log In'}</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Footer stays at the bottom */}
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={() => router.push("/FAQ")}>
-            <Text style={styles.footerText}>Need Help?</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Everything centered here */}
+            <View style={styles.centerWrap}>
+              <Image
+                source={require("../assets/main_ui/aria_mouthopen.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+
+              <Text style={styles.header}>Log in to ARIA</Text>
+
+              <View style={styles.formGroup}>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor="#888"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!loading}
+                />
+
+                <View style={styles.passwordWrapper}>
+                  <TextInput
+                    style={styles.inputPassword}
+                    placeholder="Password"
+                    placeholderTextColor="#888"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(prev => !prev)}
+                    disabled={loading}
+                  >
+                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#888" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Remember me checkbox */}
+                <View style={styles.checkboxContainer}>
+                  <TouchableOpacity
+                    style={styles.checkbox}
+                    onPress={() => setRememberMe(!rememberMe)}
+                    activeOpacity={0.8}
+                    disabled={loading}
+                  >
+                    <View style={[styles.checkboxBox, rememberMe && styles.checkboxBoxChecked]}>
+                      {rememberMe && <Ionicons name="checkmark" size={16} color="#fff" />}
+                    </View>
+                    <Text style={styles.checkboxLabel}>Stay signed in</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.signUpPrompt}>
+                <Text style={styles.promptText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => router.push("/signup")}>
+                  <Text style={styles.signupText}>Sign up</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+
+            {/* Footer stays at the bottom */}
+            <View style={styles.bottomAction}>
+              <TouchableOpacity
+                style={[styles.LogInButton, loading && { opacity: 0.6 }]}
+                activeOpacity={0.85}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                <Text style={styles.LogInText}>
+                  {loading ? "Signing in..." : "Log in"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push("/FAQ")}>
+                <Text style={styles.footerText}>Need Help?</Text>
+              </TouchableOpacity>
+            </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ImageBackground>
   );
 };
 
-export default LoginScreen;
-
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
   backButton: {
     position: "absolute",
     top: Platform.OS === "ios" ? 48 : 28,
     left: 10,
+    paddingTop: 10,
     zIndex: 2,
-  },
-  signOutButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 48 : 28,
-    right: 10,
-    zIndex: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  signOutText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
   },
   centerWrap: {
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
     width: "100%",
-    paddingTop: 25,
+    paddingTop: 20,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
     marginTop: 70,
     alignSelf: "center",
   },
@@ -222,31 +234,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
     letterSpacing: 1,
     marginBottom: 10,
-  },
-  statusContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  statusText: {
-    color: "#22c55e",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  goToAppButton: {
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  goToAppText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
   },
   formGroup: {
     width: width * 0.85,
@@ -313,7 +300,7 @@ const styles = StyleSheet.create({
     height: 60,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 100,
+    marginBottom: 20,
     alignSelf: "center",
     shadowColor: "#ffa842",
     shadowOpacity: 0.18,
@@ -357,6 +344,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
+  bottomAction: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0, // flush with the screen
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    paddingBottom: 0, // more gap if you want
+  },  
   footer: {
     position: "absolute",
     bottom: Platform.OS === "ios" ? 38 : 25,
@@ -401,5 +398,6 @@ const styles = StyleSheet.create({
     color: "#444",
     fontWeight: "500",
   },
-  
 });
+
+export default LoginScreen;

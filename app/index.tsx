@@ -22,8 +22,8 @@ const WelcomeScreen: React.FC = () => {
 
   //  ←  force-logout on mount so every cold start goes through login
   useEffect(() => {
-    if (isSignedIn) signOut();                        // clear session
-  }, []);                                             // run only once
+    if (isSignedIn) signOut();
+  }, []);
 
   // if we arrive here while signed-in, jump to the app pages
   useEffect(() => {

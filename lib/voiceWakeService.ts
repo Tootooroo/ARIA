@@ -1,79 +1,117 @@
 import { PorcupineManager } from '@picovoice/porcupine-react-native';
+import { Asset } from 'expo-asset';
+import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 
-let porcupineManager: any = null;
+let porcupineManager: PorcupineManager | null = null;
 let isActive = false;
 
 // You need to get this from https://console.picovoice.ai/
-const ACCESS_KEY = 'UOOuBrvoezmOrCsl79uqoaHa4w+S6A3WY637vwIdOd59AI+vrOtJZg==';
+//(ios) const ACCESS_KEY = 'UOOuBrvoezmOrCsl79uqoaHa4w+S6A3WY637vwIdOd59AI+vrOtJZg==';
+const ACCESS_KEY = 'x/0syzP9WIFeLM+gOm00tcIduTevo2k7h+uzr11xp5ZdBuuUs7Rw3g==';
 
-export const initWakeWordDetection = async (
-  onWakeWord: () => void,
-  wakeWordModelPath?: string 
-) => {
-  if (porcupineManager) return; 
+/**
+ * Initialize and start wake-word detection.
+ */
+export const initWakeWordDetection = async (onWakeWord: () => void) => {
+  if (porcupineManager) return;
 
   try {
-    // Path to your .ppn model (put in assets directory and reference with `require`)
-    // For built-in keywords, you could use: [BuiltInKeyword.Porcupine] or similar.
-    // But for custom: use your actual asset path.
-    // You may need to use require() for asset paths (especially for iOS in RN)
-    const keywordPaths = Platform.select({
-      ios: [wakeWordModelPath || require('@/assets/wakeword/Hey-Aria_en_ios_v3_0_0.ppn')],
-      android: [wakeWordModelPath || require('@/assets/wakeword/Hey-Aria_android_v3_0_0.ppn')],
-    });
+    console.log('🔍 Starting wake-word init...');
 
+    // STEP 1: Bundle the correct PPn for the platform
+    const modelModule = Platform.OS === 'android'
+      ? require('../assets/wakeword/Hey-Aria_en_android_v3_0_0.ppn')
+      : require('../assets/wakeword/Hey-Aria_en_ios_v3_0_0.ppn');
+
+    // STEP 2: Download via Expo Asset
+    const asset = Asset.fromModule(modelModule);
+    console.log('📥 Downloading model asset...', asset.uri);
+    await asset.downloadAsync();
+
+    // STEP 3: Strip file:// prefix and copy into a stable cache path
+    const srcUri = asset.localUri!;  
+    const fileName = `${asset.name}.ppn`;  
+    const destUri = FileSystem.cacheDirectory + fileName;  // file:///…/cache/Hey-Aria_en_android_v3_0_0.ppn
+
+    // 4) Copy in if missing
+    const info = await FileSystem.getInfoAsync(destUri);
+    if (!info.exists) {
+      console.log('📂 Copying model to:', destUri);
+      await FileSystem.copyAsync({ from: srcUri, to: destUri });
+    }
+    // (Optional) verify
+    const ok = (await FileSystem.getInfoAsync(destUri)).exists;
+    console.log('✅ Model exists at destUri?', ok);
+
+    // 5) Strip file:// for Porcupine
+    const plainPath = destUri.replace(/^file:\/\//, '');
+    console.log('📂 Plain path for Porcupine:', plainPath);
+
+    // 6) Init Porcupine
     porcupineManager = await PorcupineManager.fromKeywordPaths(
-      ACCESS_KEY, 
-      keywordPaths!,
-      (keywordIndex: number) => {
-        console.log('[🚨 Hotword detected!]', keywordIndex);
-        stopWakeWordDetection();
+      ACCESS_KEY,
+      [plainPath],
+      () => {
+        console.log('🚨 Hotword detected!');
         onWakeWord();
       },
-      (error: any) => {
-        console.error('[Picovoice Error]', error);
-      }
+      (err) => console.error('🛑 Porcupine error', err)
     );
 
+    // 7) Start listening
     await porcupineManager.start();
     isActive = true;
-    console.log('🎙️ Picovoice Porcupine wake word listener started...');
-  } catch (error) {
-    console.error('❌ Failed to start Porcupine:', error);
+    console.log('🎙️ Porcupine listening');
+  } catch (err) {
+    console.error('❌ Porcupine init failed:', err);
   }
 };
 
 /**
- * Starts the wake word listener if not already active.
+ * Resume listening if previously stopped.
  */
 export const startWakeWordDetection = async () => {
   if (porcupineManager && !isActive) {
-    await porcupineManager.start();
-    isActive = true;
-    console.log('🎙️ Picovoice listening...');
+    try {
+      await porcupineManager.start();
+      isActive = true;
+      console.log('▶️ Porcupine resumed');
+    } catch (err) {
+      console.error('❌ Failed to resume Porcupine:', err);
+    }
   }
 };
 
 /**
- * Stops the wake word listener.
+ * Stop wake-word listening.
  */
 export const stopWakeWordDetection = async () => {
   if (porcupineManager && isActive) {
-    await porcupineManager.stop();
-    isActive = false;
-    console.log('🛑 Picovoice stopped.');
+    try {
+      await porcupineManager.stop();
+      console.log('⏸️ Porcupine stopped');
+    } catch (err) {
+      console.error('❌ Failed to stop Porcupine:', err);
+    } finally {
+      isActive = false;
+    }
   }
 };
 
 /**
- * Optional: Cleanup listeners if needed
+ * Clean up Porcupine resources when leaving the Chat screen.
  */
 export const destroyWakeWordDetection = async () => {
   if (porcupineManager) {
-    await porcupineManager.delete();
-    porcupineManager = null;
-    isActive = false;
-    console.log('♻️ Picovoice resources released.');
+    try {
+      await porcupineManager.delete();
+      console.log('♻️ Porcupine destroyed');
+    } catch (err) {
+      console.error('❌ Failed to destroy Porcupine:', err);
+    } finally {
+      porcupineManager = null;
+      isActive = false;
+    }
   }
 };

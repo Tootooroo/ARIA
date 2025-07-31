@@ -2,9 +2,11 @@
 import { sendMessageToOpenAI } from '@/lib/api';
 
 // Memory
-import type { ChatMessage } from '@/lib/memory';
+import type { ChatMessage, UserProfile } from '@/lib/memory';
 import {
+  createUserProfile,
   getUserMemory,
+  getUserProfile,
   storeAssistantReply,
   storeUserMessage,
 } from '@/lib/memory';
@@ -12,9 +14,11 @@ import {
 // React imports
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Dimensions,
   FlatList,
   Image,
   ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -22,12 +26,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Authentication 
-import { useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 
 // Main UI page
@@ -36,6 +41,8 @@ import { useAriaStore } from '@/lib/ariatalking';
 // User icon button & More icon button
 import SettingsModal from "./SettingsModal";
 import UserProfileModal from "./UserProfileModal";
+
+const { width, height } = Dimensions.get("window");
 
 type ClearableInputProps = {
   value: string;
@@ -91,8 +98,13 @@ function ClearableInput({
   );
 }
 
-export default function TranscriptPage() {
+interface TranscriptPageProps {
+  onNavigateToChat?: () => void;
+}
+
+export default function TranscriptPage({ onNavigateToChat }: TranscriptPageProps) {
   const { isSignedIn, isLoaded, user } = useUser();
+  const { signOut } = useAuth();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -101,33 +113,139 @@ export default function TranscriptPage() {
   const [showAllMatches, setShowAllMatches] = useState(false); 
   const insets = useSafeAreaInsets();
   const flatListRef = React.useRef<FlatList<ChatMessage>>(null);
-  const [showProfile, setShowProfile] = useState(false); // User Icon
-  const [showSettings, setShowSettings] = useState(false); // Settings
-  const [isAtBottom, setIsAtBottom] = useState(true); // Move screen to bottom
-  const [searchFocused, setSearchFocused] = useState(false); // Make list invisible
+  // Modal state management - only one modal can be open at a time
+  const [activeModal, setActiveModal] = useState<'none' | 'profile' | 'settings'>('none');
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Performance optimization states
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // User profile state
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Get the current user's Clerk ID
   const userId = user?.id || 'anonymous';
+
+  // Function to dismiss keyboard
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+    setSearchFocused(false);
+  };
+
+  // Function to open modals with smooth transitions
+  const openModal = (modalType: 'profile' | 'settings') => {
+    dismissKeyboard();
+    
+    // If another modal is open, close it first then open the new one
+    if (activeModal !== 'none' && activeModal !== modalType) {
+      setActiveModal('none');
+      // Small delay for smooth transition
+      setTimeout(() => {
+        setActiveModal(modalType);
+      }, 150);
+    } else {
+      setActiveModal(modalType);
+    }
+  };
+
+  // Function to close modal
+  const closeModal = () => {
+    setActiveModal('none');
+  };
+
+  // Function to go back to chat
+  const goBackToChat = () => {
+    console.log("🚀 Transcript: Going back to chat...");
+    dismissKeyboard(); // Dismiss keyboard when navigating
+    closeModal(); // Close any open modals
+    if (onNavigateToChat) {
+      onNavigateToChat();
+    } else {
+      // Fallback for standalone usage
+      router.push('/chat');
+    }
+  };
 
   // Redirect if not logged-in
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace('/login');
   }, [isLoaded, isSignedIn]);
 
-  // Load all history from firebase
+  // Load user profile
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!isLoaded || !isSignedIn || !user?.id) return;
+      
+      setProfileLoading(true);
+      try {
+        let profile = await getUserProfile(user.id);
+        
+        // If no profile exists, create one from Clerk data
+        if (!profile && user) {
+          const email = user.emailAddresses?.[0]?.emailAddress || '';
+          const firstName = user.firstName || '';
+          
+          // Generate username from email or name
+          let generatedUsername = '';
+          if (email) {
+            generatedUsername = email.split('@')[0]; // Use part before @
+          } else if (firstName) {
+            generatedUsername = firstName.toLowerCase().replace(/[^a-z0-9]/g, '');
+          } else {
+            generatedUsername = `user${Date.now()}`;
+          }
+          
+          const newProfileData = {
+            email: email,
+            firstName: firstName,
+            lastName: user.lastName || '',
+            displayName: user.fullName || firstName || '',
+            username: generatedUsername,
+            createdAt: Date.now(),
+          };
+          
+          await createUserProfile(user.id, newProfileData);
+          profile = await getUserProfile(user.id);
+        }
+        
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [isLoaded, isSignedIn, user]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Load history with pagination
   useEffect(() => {
     let interval: any;
     const fetchHistory = async () => {
-      const history = await getUserMemory(userId, 10000);
+      const history = await getUserMemory(userId, 100);
       setMessages(history);
+      setHasMoreMessages(history.length === 100);
     };
     fetchHistory();
 
-    // Only poll when search is empty
+    // Reduced polling frequency
     if (!search.trim()) {
       interval = setInterval(() => {
         fetchHistory();
-      }, 2000);
+      }, 30000);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -146,16 +264,37 @@ export default function TranscriptPage() {
   // When search changes, reset "show all"
   useEffect(() => {
     setShowAllMatches(false);
-  }, [search]);
+  }, [debouncedSearch]);
 
-  // Search: Find indexes of all matches
+  // Load more messages function
+  const loadMoreMessages = async () => {
+    if (loadingMore || !hasMoreMessages || search.trim()) return;
+    
+    setLoadingMore(true);
+    try {
+      const moreMessages = await getUserMemory(userId, messages.length + 50);
+      const newMessages = moreMessages.slice(messages.length);
+      
+      if (newMessages.length === 0) {
+        setHasMoreMessages(false);
+      } else {
+        setMessages(moreMessages);
+        setHasMoreMessages(newMessages.length === 50);
+      }
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    }
+    setLoadingMore(false);
+  };
+
+  // Search: Find indexes of all matches using debounced search
   const searchIndexes = useMemo(() =>
-    search.trim()
+    debouncedSearch.trim()
       ? messages.reduce((arr, msg, idx) => (
-          msg.content.toLowerCase().includes(search.toLowerCase()) ? [...arr, idx] : arr
+          msg.content.toLowerCase().includes(debouncedSearch.toLowerCase()) ? [...arr, idx] : arr
         ), [] as number[])
       : []
-  , [search, messages]);
+  , [debouncedSearch, messages]);
 
   // Only top N visible if not showAllMatches
   const MAX_VISIBLE = 10;
@@ -165,13 +304,14 @@ export default function TranscriptPage() {
   // Send message, store to Firebase, recall ALL history
   const handleSend = async () => {
     if (!input.trim() || sending) return;
+    dismissKeyboard(); // Dismiss keyboard when sending
     setLoading(true);
 
     // 1. Store user message in Firebase
     await storeUserMessage(userId, input);
 
     // 2. Load ALL chat history from Firebase
-    const fullHistory = await getUserMemory(userId, 10000); // Increase as needed
+    const fullHistory = await getUserMemory(userId, 200); // Increase as needed
     const contextHistory = fullHistory.slice(-CONTEXT_WINDOW_SIZE);
 
     // 3. Append "thinking..." for UI feedback
@@ -195,7 +335,7 @@ export default function TranscriptPage() {
     await storeAssistantReply(userId, replyContent);
 
     // 6. Load updated history and update UI
-    const updatedHistory = await getUserMemory(userId, 10000);
+    const updatedHistory = await getUserMemory(userId, Math.max(200, messages.length + 2));
     setMessages(updatedHistory);
   } catch (error) {
     setMessages((prev) => [
@@ -218,6 +358,22 @@ export default function TranscriptPage() {
     }, 300);
   };
 
+  // Handle profile updates
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    setUserProfile(updatedProfile);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      closeModal(); // Close any open modals
+      await signOut();
+      router.replace('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   if (!isLoaded || !isSignedIn) return null;
 
   return (
@@ -232,9 +388,16 @@ export default function TranscriptPage() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
       >
+          {/* Left side tap zone for navigation */}
+          <TouchableOpacity 
+            style={styles.leftTapZone}
+            onPress={goBackToChat}
+            activeOpacity={0.1}
+          />
+
         {/* Top Bar */}
         <View style={[styles.topBar, {paddingTop: insets.top }]}>
-          <TouchableOpacity onPress={() => setShowProfile(true)}>
+          <TouchableOpacity onPress={() => openModal('profile')}>
             <Image source={require('@/assets/main_ui/User_Icon.png')} style={styles.usericon} />
           </TouchableOpacity>
           <View style={styles.searchInputWrap}>
@@ -247,7 +410,7 @@ export default function TranscriptPage() {
               onBlur={() => setSearchFocused(false)}
             />
           </View>
-          <TouchableOpacity onPress={() => setShowSettings(true)}>
+          <TouchableOpacity onPress={() => openModal('settings')}>
             <Image source={require('@/assets/main_ui/More_icon.png')} style={styles.moreicon} />
           </TouchableOpacity>
         </View>
@@ -344,65 +507,96 @@ export default function TranscriptPage() {
         )}
 
         {/* Transcript List */}
-        <View style={styles.transcriptContainer}>
-          <View style={styles.transcriptArea}>
-            {messages.length === 0 ? (
-              <Text style={{ color: '#bbb', alignSelf: 'center', marginTop: 20 }}>
-                No chat history yet.
-              </Text>
-            ) : (
-              <FlatList
-                ref={flatListRef}
-                style={{ flex: 1 }}
-                data={messages}
-                keyExtractor={(_, index) => index.toString()}
-                renderItem={({ item, index }) => (
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-                    {item.role === 'user' ? (
-                      <Text style={[styles.transcriptLine, styles.userText, { marginRight: 6 }]}>You: </Text>
-                    ) : (
-                      <Image
-                        source={require('@/assets/main_ui/aria_sleep.png')}
-                        style={{ width: 22, height: 22, marginRight: 6, marginTop: -2, resizeMode: 'contain' }}
-                      />
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[
-                          styles.transcriptLine,
-                          item.role === 'user' ? styles.userText : styles.assistantText,
-                          search &&
-                          item.content.toLowerCase().includes(search.toLowerCase())
-                            ? { backgroundColor: '#ffecc5', borderRadius: 4 }
-                            : {}
-                        ]}
-                      >
-                        {item.content}
-                      </Text>
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+          <View style={styles.transcriptContainer}>
+            <View style={styles.transcriptArea}>
+              {messages.length === 0 ? (
+                <Text style={{ color: '#bbb', alignSelf: 'center', marginTop: 20 }}>
+                  No chat history yet.
+                </Text>
+              ) : (
+                <FlatList
+                  ref={flatListRef}
+                  style={{ flex: 1 }}
+                  data={messages}
+                  keyExtractor={(_, index) => index.toString()}
+
+                    // Performance optimizations
+                    removeClippedSubviews={true}
+                    maxToRenderPerBatch={20}
+                    updateCellsBatchingPeriod={50}
+                    initialNumToRender={15}
+                    windowSize={10}
+                    
+                    // Load more functionality
+                    onEndReached={loadMoreMessages}
+                    onEndReachedThreshold={0.5}
+
+                  renderItem={({ item, index }) => (
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
+                      {item.role === 'user' ? (
+                        <Text style={[styles.transcriptLine, styles.userText, { marginRight: 6 }]}>You: </Text>
+                      ) : (
+                        <Image
+                          source={require('@/assets/main_ui/aria_sleep.png')}
+                          style={{ width: 22, height: 22, marginRight: 6, marginTop: -2, resizeMode: 'contain' }}
+                        />
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[
+                            styles.transcriptLine,
+                            item.role === 'user' ? styles.userText : styles.assistantText,
+                            search &&
+                            item.content.toLowerCase().includes(search.toLowerCase())
+                              ? { backgroundColor: '#ffecc5', borderRadius: 4 }
+                              : {}
+                          ]}
+                        >
+                          {item.content}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                )}
-                contentContainerStyle={{ paddingBottom: 12 }}
-                keyboardShouldPersistTaps="handled"
-                onScrollToIndexFailed={handleScrollToIndexFailed}
-                onScroll={event => {
-                  const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-                  const paddingToBottom = 60; 
-                  setIsAtBottom(
-                    contentOffset.y + layoutMeasurement.height >= contentSize.height - paddingToBottom
-                  );
-                }}
-                scrollEventThrottle={100}
-              />
-            )}
+                  )}
+
+                    // Loading indicator for pagination
+                    ListFooterComponent={() => (
+                      loadingMore ? (
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                          <Text style={{ color: '#666' }}>Loading more messages...</Text>
+                        </View>
+                      ) : !hasMoreMessages && messages.length > 50 ? (
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                          <Text style={{ color: '#666' }}>No more messages</Text>
+                        </View>
+                      ) : null
+                    )}
+
+                  contentContainerStyle={{ paddingBottom: 12 }}
+                  keyboardShouldPersistTaps="handled"
+                  onScrollToIndexFailed={handleScrollToIndexFailed}
+                  onScroll={event => {
+                    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+                    const paddingToBottom = 60; 
+                    setIsAtBottom(
+                      contentOffset.y + layoutMeasurement.height >= contentSize.height - paddingToBottom
+                    );
+                  }}
+                  scrollEventThrottle={100}
+                />
+              )}
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
 
         {/* Scroll to Bottom Arrow */}
         {messages.length > 0 && (
           <TouchableOpacity
-            onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            style={{
+          onPress={() => {
+            dismissKeyboard();
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }}
+          style={{
               position: 'absolute',
               right: 20,
               bottom: insets.bottom + 62,
@@ -436,7 +630,11 @@ export default function TranscriptPage() {
             placeholder="Type a message..."
             inputStyle={styles.input}
           />
-          <TouchableOpacity onPress={handleSend} disabled={sending} style={styles.chatIconButton}>
+          <TouchableOpacity 
+            onPress={handleSend}
+            disabled={sending} 
+            style={styles.chatIconButton}
+          >
             <Image
               source={require('@/assets/main_ui/Chat_Icon.png')}
               style={[styles.chatIcon, sending && { opacity: 0.5 }, { tintColor: '#fff' }]}
@@ -444,15 +642,16 @@ export default function TranscriptPage() {
           </TouchableOpacity>
         </View>
         <UserProfileModal
-          visible={showProfile}
-          onClose={() => setShowProfile(false)}
-          userName="Ricky"
-          userEmail="demoemail123@gmail.com"
-          onLogout={() => alert("Logged out!")}
+          visible={activeModal === 'profile'}
+          onClose={closeModal}
+          userProfile={userProfile}
+          onLogout={handleLogout}
+          onProfileUpdate={handleProfileUpdate}
+          onChatHistoryDeleted={() => setMessages([])}
         />
         <SettingsModal
-          visible={showSettings}
-          onClose={() => setShowSettings(false)}
+          visible={activeModal === 'settings'}
+          onClose={closeModal}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -461,11 +660,20 @@ export default function TranscriptPage() {
 }
 
 const styles = StyleSheet.create({
+  leftTapZone: {
+    position: 'absolute',
+    left: 5,
+    top: height * 0.25,
+    bottom: height * 0.25,
+    width: 60,
+    zIndex: 1,
+    backgroundColor: 'transparent',
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    zIndex: 1,
+    zIndex: 10,
   },
   usericon: {
     width: 55,
@@ -486,13 +694,20 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1,
     marginHorizontal: 6,
-    backgroundColor: '#fff8ee',
-    borderRadius: 17,
-    height: 35,
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255, 248, 238, 0.9)', // Glass transparency
+    borderRadius: 20,
+    height: 38,
+    paddingHorizontal: 12,
     fontSize: 14,
     color: '#222',
     textAlignVertical: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   transcriptContainer: {
     flex: 1,
@@ -500,10 +715,17 @@ const styles = StyleSheet.create({
   },
   transcriptArea: {
     flex: 1,
-    backgroundColor: '#ffcc99',
+    backgroundColor: 'rgba(255, 204, 153, 0.85)', // Glass morphism transparency
     margin: 16,
-    borderRadius: 28,
-    padding: 18,
+    borderRadius: 32,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)', // Glass border
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
   transcriptLine: {
     marginBottom: 14,
@@ -519,16 +741,18 @@ const styles = StyleSheet.create({
   chatBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFB980',
-    borderRadius: 24,
-    minHeight: 40,
+    backgroundColor: 'rgba(255, 185, 128, 0.9)', // Glass morphism
+    borderRadius: 28,
+    minHeight: 46,
     marginHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2,
-    paddingHorizontal: 14,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    paddingHorizontal: 16,
   },
   input: {
     flex: 1,
