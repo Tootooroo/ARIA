@@ -45,3 +45,5 @@ yarn-error.*
 
 app-example
 .vercel
+backend/firebaseServiceAccountKey.json
+backend/firebaseServiceAccountKey.json
