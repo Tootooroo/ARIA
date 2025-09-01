@@ -4,54 +4,80 @@ import { Dimensions, ScrollView, StyleSheet, Text } from "react-native";
 const { width } = Dimensions.get("window");
 
 type AboutContentProps = {
-    noTitle?: boolean;
-  };
-  
-function AboutContent({ }: AboutContentProps) {
+  noTitle?: boolean;
+};
+
+function AboutContent({}: AboutContentProps) {
   return (
-    <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
-
-      <Text style={styles.subtitle}>
-        Welcome to your dream AI companion! 
-      </Text>
-        
-      <Text style={styles.body}>
-        A smart assistant, friendly partner, and caring helper, all in one place.
-      </Text>
+    <ScrollView
+      style={{ maxHeight: width > 480 ? 630 : 540 }}
+      contentContainerStyle={{ padding: 26 }}
+    >
+      <Text style={styles.subtitle}>Welcome to ARIA</Text>
 
       <Text style={styles.body}>
-        Imagine an AI that truly <Text style={styles.italic}>gets</Text> you: ready to listen, chat, motivate, organize, teach, and be there for you 24/7. With natural conversations, smart reminders, and unlimited curiosity, your AI is here to help you thrive, every single day.
+        Your focused AI copilot for learning, practice, and review. ARIA keeps things simple:
+        learn the essentials, practice safely, journal honestly, and track progress with clear
+        metrics.
       </Text>
 
-      <Text style={styles.sectionHeader}>Designed For Everyone, Everywhere</Text>
-
+      <Text style={styles.sectionHeader}>Built for real life</Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Professionals: </Text>
-        Stay productive, organized, and inspired—let your AI handle reminders, emails, ideas, and mental breaks.
+        <Text style={styles.bold}>• Professionals:</Text> Draft, summarize, and plan without the fluff.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Families & Kids: </Text>
-        Safe, fun conversations spark learning and friendship. Homework help, jokes, and new adventures await.
+        <Text style={styles.bold}>• Families & learners:</Text> Clear explanations, patient tutoring, creative prompts.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Seniors: </Text>
-        A patient, friendly guide for tech, health, and daily life—plus, real companionship for every moment.
-      </Text>
-      <Text style={styles.body}>
-        <Text style={styles.bold}>• Unique Needs: </Text>
-        Gentle routines, encouragement, and a non-judgmental buddy who adapts to your pace.
+        <Text style={styles.bold}>• Traders & investors:</Text> Practice with a simulated market, size by{" "}
+        Risk “R”, check risk before every order, and journal each trade.
       </Text>
 
-      <Text style={styles.sectionHeader}>Why Choose Us?</Text>
-      <Text style={styles.body}>• Truly personal: Customize themes, backgrounds, and even your AI’s personality.</Text>
-      <Text style={styles.body}>• Peace of mind: Your data is secure and private. Your conversations stay yours.</Text>
-      <Text style={styles.body}>• Grows with you:Our AI gets smarter, more helpful, and your feedback drives every update.</Text>
+      <Text style={styles.sectionHeader}>What’s inside today</Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Conversational AI:</Text> Helpful, context-aware chat for answers, planning, and review.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Practice Trading:</Text> Simulated market feed, Quick Ticket,{" "}
+        <Text style={styles.bold}>Position Sizing · Risk “R”</Text>, and{" "}
+        <Text style={styles.bold}>Pre-Trade Risk Check</Text>.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Journal:</Text> Attach notes to trades to grade your execution and mindset.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Progress:</Text> Lessons completed, quiz accuracy/coverage, learning streak, badges, and an optional readiness checklist.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Paper Trading:</Text> Toggle on to track simulated cash, positions, and P&amp;L.
+      </Text>
+
+      <Text style={styles.sectionHeader}>Why ARIA</Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Personal:</Text> Adaptable tone and settings that match your style.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Transparent:</Text> Clear logs and controls—what happens and why.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Risk-first:</Text> Position sizing, 1R limits, and a pre-trade check built into the workflow.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>Privacy-aware:</Text> Features are opt-in; your data is used only to provide what you enable.
+      </Text>
 
       <Text style={styles.body}>
-        With our app, you never have to feel lost, lonely, or overwhelmed again. Discover your new AI best friend, helper, and coach—always there, always on your side.
+        ARIA is here to reduce friction, build discipline, and help you practice the right way—before you ever risk real dollars.
       </Text>
-      <Text style={styles.ending}>
-        Welcome to a better, brighter you. Download now and let the journey begin!
+
+      <Text style={styles.ending}>Ready when you are. Let’s get started.</Text>
+
+      {/* Clear, consistent disclaimer (matches Practice/Progress wording) */}
+      <Text style={[styles.body, { opacity: 0.9 }]}>
+        <Text style={styles.bold}>Disclaimer:</Text> Educational use only. Not investment advice. Market data may be
+        delayed or simulated. Paper Trading is optional and separate from any future live integrations. If you later connect
+        a supported broker, automation remains off by default and requires explicit opt-in with your risk limits. All
+        investing involves risk—no strategy can guarantee profits.
       </Text>
     </ScrollView>
   );
@@ -60,11 +86,29 @@ function AboutContent({ }: AboutContentProps) {
 export default AboutContent;
 
 const styles = StyleSheet.create({
-  container: { padding: 26, backgroundColor: "transparent", flex: 1 },
-  subtitle: { fontWeight: "bold", fontSize: 26, color: "#FFA842", marginBottom: 12, textAlign: "center" },
-  sectionHeader: { fontWeight: "bold", fontSize: 20, marginTop: 20, marginBottom: 8, color: "#FFD07B" },
+  subtitle: {
+    fontWeight: "bold",
+    fontSize: 26,
+    color: "#FFA842",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  sectionHeader: {
+    fontWeight: "bold",
+    fontSize: 20,
+    marginTop: 20,
+    marginBottom: 8,
+    color: "#FFD07B",
+  },
   bold: { fontWeight: "bold", color: "#FFA842" },
   italic: { fontStyle: "italic", color: "#ccc" },
   body: { color: "#fff", fontSize: 16, lineHeight: 26, marginBottom: 10 },
-  ending: { marginTop: 16, marginBottom: 26, fontWeight: "bold", color: "#FFA842", fontSize: 18, textAlign: "center" },
+  ending: {
+    marginTop: 16,
+    marginBottom: 26,
+    fontWeight: "bold",
+    color: "#FFA842",
+    fontSize: 18,
+    textAlign: "center",
+  },
 });

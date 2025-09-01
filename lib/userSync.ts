@@ -1,4 +1,3 @@
-
 import { useUser } from '@clerk/clerk-expo';
 import { useEffect } from 'react';
 import { createUserProfile, getUserProfile } from './memory';

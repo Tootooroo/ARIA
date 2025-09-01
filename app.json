@@ -7,17 +7,20 @@
     "icon": "./assets/images/icon.png",
     "scheme": "aicompanionapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.aicompanionapp",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to your camera so you can take photos for your profile.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library so you can choose profile photos.",
-        "NSPhotoLibraryAddUsageDescription": "This app needs to save photos to your photo library."
+        "NSPhotoLibraryAddUsageDescription": "This app needs to save photos to your photo library.",
+        "NSMicrophoneUsageDescription": "We use the microphone so you can talk to the assistant.",
+        "NSSpeechRecognitionUsageDescription": "We use the microphone to capture your voice."
       }
     },
     "android": {
+      "permissions": ["RECORD_AUDIO"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -43,7 +46,14 @@
       ],
       "expo-secure-store",
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      "expo-dev-client",
+      [
+        "expo-build-properties",
+        {
+          "ios": { "useFrameworks": "static" }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

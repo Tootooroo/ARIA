@@ -16,13 +16,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // About app page
-import AboutContent from './Settings/AboutContent';
+import AboutContent from '../Settings/AboutContent';
 
 // Privacy statement page
-import PrivacyStatement from './Settings/PrivacyStatement';
+import PrivacyStatement from '../Settings/PrivacyStatement';
 
 // Future updates page
-import Updates from './Settings/Updates';
+import Updates from '../Settings/Updates';
 
 const { width } = Dimensions.get("window");
 
@@ -247,12 +247,12 @@ export default function SettingsModal({
                       styles.menuItem,
                       { borderTopWidth: 0.7, borderTopColor: "rgba(255,255,255,0.13)" }
                     ]}
-                    onPress={() => Alert.alert("Vibration / Haptics", "Toggle vibration/haptics when Aria responds coming soon!")}
+                    onPress={() => Alert.alert("Vibration / Haptics", "Toggle vibration/haptics coming soon!")}
                   >
                     <Text style={styles.menuText}>Vibration / Haptics</Text>
                     <Feather name="smartphone" size={18} color="#FFA842" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Compact Mode", "Reduce animations / compact mode coming soon!")}>
+                  <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert("Compact Mode", "Compact mode coming soon!")}>
                     <Text style={styles.menuText}>Compact Mode</Text>
                     <Feather name="minimize" size={18} color="#FFA842" />
                   </TouchableOpacity>

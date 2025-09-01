@@ -31,20 +31,6 @@ allprojects {
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
   }
-
-  // === Force AndroidX, block old support libraries ===
-    configurations.all {
-        resolutionStrategy {
-            // Force androidx versions and block com.android.support
-            force 'androidx.core:core:1.13.1'
-            force 'androidx.versionedparcelable:versionedparcelable:1.1.1'
-            eachDependency { details ->
-                if (details.requested.group == 'com.android.support') {
-                    details.useTarget group: 'androidx.core', name: 'core', version: '1.13.1'
-                }
-            }
-        }
-    }
 }
 
 apply plugin: "expo-root-project"

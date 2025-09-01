@@ -1,32 +1,48 @@
 import { useUser } from '@clerk/clerk-expo';
-import { useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import PagerView from 'react-native-pager-view';
-import { useUserSync } from '../lib/userSync';
-import ChatScreen from './chat';
-import WelcomeScreen from './index';
-import TranscriptScreen from './transcript';
+import PagerView, { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
+
+import { useUserSync } from '@/lib/userSync';
+import ChatScreen from './screens/chat';
+import PracticeScreen from './screens/practice';
+import TranscriptScreen from './screens/transcript';
 
 export default function AppContent() {
   const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
+
   const [currentPage, setCurrentPage] = useState(0);
   const pagerRef = useRef<PagerView>(null);
+
   useUserSync();
 
-  console.log("🔍 AppContent - isSignedIn:", isSignedIn, "isLoaded:", isLoaded);
+  // Allow children to enable/disable pager swipe gestures
+  const setPagerSwipeEnabled = useCallback((enabled: boolean) => {
+    // react-native-pager-view provides setScrollEnabled on the ref
+    // (older versions call it "setScrollEnabled"; leaving optional chaining for safety)
+    pagerRef.current?.setScrollEnabled?.(enabled);
+  }, []);
 
-  // Functions to control page sliding
-  const goToTranscript = () => {
-    console.log("📱 AppContent: Navigating to transcript");
-    pagerRef.current?.setPage(1);
-    setCurrentPage(1);
-  };
+  const setPageSafely = useCallback(
+    (page: number) => {
+      const clamped = Math.max(0, Math.min(2, page)); // 3 pages
+      if (clamped !== currentPage) {
+        pagerRef.current?.setPage?.(clamped);
+        setCurrentPage(clamped);
+      }
+    },
+    [currentPage]
+  );
 
-  const goToChat = () => {
-    console.log("📱 AppContent: Navigating to chat");
-    pagerRef.current?.setPage(0);
-    setCurrentPage(0);
-  };
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.replace('/login');
+  }, [isLoaded, isSignedIn, router]);
+
+  const handlePageSelected = useCallback((e: PagerViewOnPageSelectedEvent) => {
+    setCurrentPage(e.nativeEvent.position);
+  }, []);
 
   if (!isLoaded) {
     return (
@@ -35,28 +51,47 @@ export default function AppContent() {
       </View>
     );
   }
+  if (!isSignedIn) return null;
 
   return (
-    !isSignedIn ? (
-      <WelcomeScreen />
-    ) : (
-      <PagerView 
+    <View style={{ flex: 1 }} pointerEvents="box-none">
+      <PagerView
         ref={pagerRef}
-        style={{ flex: 1 }} 
+        style={{ flex: 1 }}
         initialPage={0}
-        scrollEnabled={true}
-        pageMargin={0}
-        overdrag={false}
-        offscreenPageLimit={1}
+        scrollEnabled
+        overdrag
+        offscreenPageLimit={3}
         orientation="horizontal"
-        onPageSelected={(e) => {
-          console.log("📱 Page changed to:", e.nativeEvent.position);
-          setCurrentPage(e.nativeEvent.position);
-        }}
+        layoutDirection="ltr"
+        onPageSelected={handlePageSelected}
       >
-        <ChatScreen key="chat" onNavigateToTranscript={goToTranscript} />
-        <TranscriptScreen key="transcript" onNavigateToChat={goToChat} />
+        <View key="chat" style={{ flex: 1 }} pointerEvents="box-none">
+          <ChatScreen
+            isActive={currentPage === 0}
+            isSwiping={true}
+            onNavigateToTranscript={() => setPageSafely(1)}
+            setPagerSwipeEnabled={setPagerSwipeEnabled}
+          />
+        </View>
+
+        <View key="transcript" style={{ flex: 1 }} pointerEvents="box-none">
+          <TranscriptScreen
+            isActive={currentPage === 1}
+            isSwiping={true}
+            onNavigateToChat={() => setPageSafely(0)}
+            setPagerSwipeEnabled={setPagerSwipeEnabled}
+          />
+        </View>
+
+        <View key="practice" style={{ flex: 1 }} pointerEvents="box-none">
+          <PracticeScreen
+            isActive={currentPage === 2}
+            isSwiping={true}
+            setPagerSwipeEnabled={setPagerSwipeEnabled}
+          />
+        </View>
       </PagerView>
-    )
+    </View>
   );
 }

@@ -1182,7 +1182,7 @@ const styles = StyleSheet.create({
     left: "4%", 
     alignSelf: "flex-end",
     width: width > 480 ? 400 : width * 0.92,
-    backgroundColor: "rgba(180, 90, 0, 0.82)", // Toned down orange with glass transparency
+    backgroundColor: "hsla(30, 76.90%, 28.80%, 0.94)", // Toned down orange with glass transparency
     borderRadius: 32,
     padding: 22,
     paddingBottom: 12,

@@ -4,94 +4,51 @@ import { Dimensions, ScrollView, StyleSheet, Text } from "react-native";
 const { width } = Dimensions.get("window");
 
 type AboutContentProps = {
-    noTitle?: boolean;
-  };
-  
-function Updates({ }: AboutContentProps) {
+  noTitle?: boolean;
+};
+
+function Updates({}: AboutContentProps) {
   return (
-    <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
-
-<Text style={styles.header}>
-        Aria is always evolving! Here you’ll find details on our current version, what’s next, and the exciting future we’re building together. {'\n'}The journey has just begun!
+    <ScrollView
+      style={{ maxHeight: width > 480 ? 630 : 540 }}
+      contentContainerStyle={{ padding: 26 }}
+    >
+      <Text style={styles.header}>
+        ARIA is evolving fast. Here’s what’s live today and what’s coming next. Thanks for building with us!
       </Text>
 
-      <Text style={styles.sectionHeader}>Current Version: <Text style={styles.bold}>Beta 1.0.1</Text></Text>
+      <Text style={styles.sectionHeader}>
+        Current Version: <Text style={styles.bold}>Beta 1.0.1</Text>
+      </Text>
       <Text style={styles.body}>
-        • Aria character model (2D animated){'\n'}
-        • Base theme and user interface{'\n'}
-        • Unlimited conversation history{'\n'}
-        • Unlimited AI questions, always available, any time{'\n'}
-        • English language support (more coming soon){'\n'}
-        • Photo support{'\n'}
-        • Smart scheduling, reminders, and calendar{'\n'}
-        • control device basics (open apps, reminders, etc.){'\n'}
-        • Modern settings menu and user features{'\n'}
-        • Full privacy and About pages{'\n'}
-        • Direct user feedback and support—your ideas matter!
+        • Conversational AI — helpful, clear, context-aware chat{"\n"}
+        • Learn, Practice, Journal, Progress — a risk-first learning loop{"\n"}
+        • Simulated Market — practice safely with Quick Ticket (Buy/Sell){"\n"}
+        • Paper Trading toggle — reset account, track cash/equity/positions{"\n"}
+        • Position Sizing by 1R — entry/stop/target, recommended shares, target price{"\n"}
+        • Pre-Trade Risk Check — confirms size fits your 1R{"\n"}
+        • In-app guides — “i” info messages for each section
       </Text>
 
-      <Text style={styles.sectionHeader}>Coming Next: <Text style={styles.bold}>Beta 1.0.2</Text></Text>
+      <Text style={styles.sectionHeader}>Coming soon</Text>
       <Text style={styles.body}>
-        • All settings and menu buttons activated{'\n'}
-        • Smarter device controls and actions{'\n'}
-        • Theme/background color selection{'\n'}
-        • Character switching and new looks{'\n'}
-        • Start 3D Aria character rendering{'\n'}
-        • Multi-language UI and voice options{'\n'}
-        • Compact mode for faster access{'\n'}
-        • Better notifications and alerts{'\n'}
-        • Multifactor authentication{'\n'}
-        • UI polish and smoother animations
+        • <Text style={styles.bold}>Reminders & routines:</Text> e.g., “Take a break at 3pm”, “Water plants on Sundays”.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>World clocks & timers:</Text> e.g., “Show Tokyo & NYC time”, “20-minute focus timer”.
+      </Text>
+      <Text style={styles.body}>
+        • <Text style={styles.bold}>More integrations:</Text> calendars, notes, and richer data sources.
       </Text>
 
-      <Text style={styles.sectionHeader}>Planned for Upcoming Updates</Text>
+      <Text style={styles.sectionHeader}>How we build</Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>AI Features:</Text>{'\n'}
-        • Proactive reminders and suggestions{'\n'}
-        • Context-aware, multi-turn chat{'\n'}
-        • Pick Aria’s personality and mood{'\n'}
-        • Advanced voice, gender, and tone choices{'\n'}
-        • Learning routines and coaching support{'\n'}
-        • Voice commands for all device controls{'\n'}
-        • In-app photo analysis and voice description
-      </Text>
-      <Text style={styles.body}>
-        <Text style={styles.bold}>Character & Visuals:</Text>{'\n'}
-        • Full 3D Aria with movement and emotion{'\n'}
-        • Pop-up Aria mascot on homescreen{'\n'}
-        • Use your own photos for Aria’s look{'\n'}
-        • Virtual pet/mascot mode for fun{'\n'}
-        • Unlockable outfits and custom styles
-      </Text>
-      <Text style={styles.body}>
-        <Text style={styles.bold}>User Experience:</Text>{'\n'}
-        • Offline mode for chat and reminders{'\n'}
-        • Home screen widgets and shortcuts{'\n'}
-        • Family/child safe content modes{'\n'}
-        • Accessibility: big text, high contrast{'\n'}
-        • Better onboarding and app tour
-      </Text>
-      <Text style={styles.body}>
-        <Text style={styles.bold}>Community & Security:</Text>{'\n'}
-        • In-app help and FAQ center{'\n'}
-        • Detailed privacy and notification settings{'\n'}
-        • Export/import and cross-device sync{'\n'}
-        • Frequent security and bug updates{'\n'}
-        • User badges, rewards, and public roadmap
-      </Text>
-      <Text style={styles.body}>
-        <Text style={styles.bold}>And more!</Text>
-        {'\n'}Have an idea? Tap feedback—help shape Aria’s future! All suggestions welcome!
+        We ship in small, reliable steps. Each release is tested, measured, and improved with your feedback.
+        Stability, clarity, and privacy come first.
       </Text>
 
-      <Text style={styles.sectionHeader}>How We Build</Text>
-      <Text style={styles.body}>
-        Every update comes from your ideas and feedback. We roll out features step by step—always testing, always improving.
-      </Text>
-      
       <Text style={styles.ending}>
-        Thanks for being a part of Aria’s journey!
-        {'\n'}Stay tuned!!! This is only the beginning.
+        Thanks for being part of ARIA’s journey—this is just the beginning.
       </Text>
     </ScrollView>
   );

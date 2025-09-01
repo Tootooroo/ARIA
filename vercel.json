@@ -1,5 +1,11 @@
 {
-  "crons": [
-    { "path": "/api/cron", "schedule": "*/10 13-20 * * 1-5" }
+  "version": 2,
+  "builds": [
+    { "src": "api/chat.ts", "use": "@vercel/node" },
+    { "src": "api/trading.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/chat", "dest": "api/chat.ts" },
+    { "src": "/api/trading", "dest": "api/trading.ts" }
   ]
 }

@@ -1,9 +1,9 @@
-import { createUserProfile } from "@/lib/memory";
-import { isUsernameAppropriate } from "@/lib/profanityFilter";
+import { createUserProfile } from '@/lib/memory';
+import { isUsernameAppropriate } from '@/lib/profanityFilter';
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
-import { AntDesign, Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -13,11 +13,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get('window');
 
 const SignupScreen: React.FC = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -25,95 +25,78 @@ const SignupScreen: React.FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
 
   const handleGoogleSignUp = async () => {
-    Alert.alert("Hang tight, Coming Soon!");
-    // Implement with Clerk OAuth if you wish
+    Alert.alert('Hang tight, Coming Soon!');
   };
 
   const handleSignup = async () => {
-    if (!isLoaded) {
-      console.log("❌ Clerk not loaded yet");
-      return;
-    }
+    if (!isLoaded) return;
 
-    // Check if user is already signed in
     if (isSignedIn) {
       Alert.alert(
-        "Already Signed In", 
+        'Already Signed In',
         "You're already signed in. Would you like to sign out and create a new account?",
         [
-          { text: "Cancel", style: "cancel" },
-          { 
-            text: "Sign Out", 
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Sign Out',
             onPress: async () => {
               await signOut();
-              setError("");
-            }
-          }
-        ]
+              setError('');
+            },
+          },
+        ],
       );
       return;
     }
 
     if (!signUp) {
-      console.log("❌ SignUp object is null");
-      setError("Authentication not initialized. Please restart the app.");
+      setError('Authentication not initialized. Please restart the app.');
       return;
     }
-
-    console.log("✅ Clerk loaded, signUp object exists");
 
     if (!username || !email || !password) {
-      setError("Please fill in all fields.");
+      setError('Please fill in all fields.');
       return;
     }
 
-    // Validate username
     const usernameValidation = isUsernameAppropriate(username);
     if (!usernameValidation.isValid) {
-      setError(usernameValidation.reason || "Invalid username.");
+      setError(usernameValidation.reason || 'Invalid username.');
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError('Password must be at least 8 characters long.');
       return;
     }
 
     setLoading(true);
-    setError("");
-    
+    setError('');
+
     try {
-      console.log("🔐 Creating signup with email:", email.toLowerCase().trim());
-      console.log("🔐 Password length:", password.length);
-      
       const result = await signUp.create({
         emailAddress: email.toLowerCase().trim(),
         password,
       });
 
-      console.log("📋 Signup result status:", result.status);
-      console.log("📋 Full signup result:", JSON.stringify(result, null, 2));
-
       if (result.status === 'missing_requirements') {
-        console.log("📧 Preparing email verification");
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
         setVerifying(true);
-        Alert.alert("Check Your Email", `We sent a verification code to ${email}`);
+        Alert.alert('Check Your Email', `We sent a verification code to ${email}`);
       } else if (result.status === 'complete') {
-        console.log("✅ Signup complete immediately");
         await setActive({ session: result.createdSessionId });
 
-        // Create user profile with username
+        // Create user profile with username (best-effort)
         try {
           await createUserProfile(result.createdUserId!, {
             email: email.toLowerCase().trim(),
@@ -121,40 +104,34 @@ const SignupScreen: React.FC = () => {
             displayName: username.trim(),
             createdAt: Date.now(),
           });
-          console.log("✅ User profile created with username");
         } catch (profileError) {
-          console.error("❌ Failed to create user profile:", profileError);
-          // Don't block signup for profile creation failure
+          console.error('Profile creation failed:', profileError);
         }
-        
-        Alert.alert("Welcome!", "Account created successfully!", [
-          { text: "Continue", onPress: () => router.replace("/AppContent") }
+
+        Alert.alert('Welcome!', 'Account created successfully!', [
+          { text: 'Continue', onPress: () => router.replace('/AppContent') },
         ]);
       }
     } catch (err: any) {
-      console.error("❌ Signup error:", JSON.stringify(err, null, 2));
-      
       if (err.errors && err.errors.length > 0) {
         const errorCode = err.errors[0].code;
         const errorMessage = err.errors[0].message;
-        
-        console.log("Error code:", errorCode);
-        
+
         switch (errorCode) {
           case 'form_password_pwned':
-            setError("Please use a different, more unique password.");
+            setError('Please use a different, more unique password.');
             break;
           case 'form_identifier_exists':
-            setError("An account with this email already exists. Try logging in instead.");
+            setError('An account with this email already exists. Try logging in instead.');
             break;
           case 'form_password_validation_failed':
-            setError("Password too weak. Try a longer password with mixed characters.");
+            setError('Password too weak. Try a longer password with mixed characters.');
             break;
           default:
-            setError(errorMessage || "Signup failed. Please try again.");
+            setError(errorMessage || 'Signup failed. Please try again.');
         }
       } else {
-        setError("Signup failed. Please try again.");
+        setError('Signup failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -163,31 +140,22 @@ const SignupScreen: React.FC = () => {
 
   const handleVerification = async () => {
     if (!isLoaded || !code.trim()) {
-      setError("Please enter the verification code.");
+      setError('Please enter the verification code.');
       return;
     }
 
     setLoading(true);
-    setError("");
-    
+    setError('');
+
     try {
-      console.log("📧 Attempting verification with code:", code);
-      console.log("📧 Current signUp status before verification:", signUp?.status);
-      
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
+      const completeSignUp = await signUp!.attemptEmailAddressVerification({
         code: code.trim(),
       });
 
-      console.log("📋 Verification result status:", completeSignUp.status);
-      console.log("📋 Full verification result:", JSON.stringify(completeSignUp, null, 2));
-
       if (completeSignUp.status === 'complete') {
-        console.log("✅ Verification successful, setting active session");
-        console.log("✅ Session ID:", completeSignUp.createdSessionId);
-        
         await setActive({ session: completeSignUp.createdSessionId });
-        
-        // Create user profile with username
+
+        // Create user profile with username (best-effort)
         try {
           await createUserProfile(completeSignUp.createdUserId!, {
             email: email.toLowerCase().trim(),
@@ -195,88 +163,62 @@ const SignupScreen: React.FC = () => {
             displayName: username.trim(),
             createdAt: Date.now(),
           });
-          console.log("✅ User profile created with username after verification");
         } catch (profileError) {
-          console.error("❌ Failed to create user profile:", profileError);
-          // Don't block signup for profile creation failure
+          console.error('Profile creation failed:', profileError);
         }
-        
-        Alert.alert("Success!", "Account verified and created successfully!", [
-          { text: "Continue", onPress: () => router.replace("/AppContent") }
+
+        Alert.alert('Success!', 'Account verified and created successfully!', [
+          { text: 'Continue', onPress: () => router.replace('/AppContent') },
         ]);
       } else {
-        console.log("❌ Verification incomplete, status:", completeSignUp.status);
-        console.log("❌ Verification object:", JSON.stringify(completeSignUp.verifications, null, 2));
         setError(`Verification incomplete. Status: ${completeSignUp.status}`);
       }
     } catch (err: any) {
-      console.error("❌ Verification error:", JSON.stringify(err, null, 2));
-      
       if (err.errors && err.errors.length > 0) {
         const errorCode = err.errors[0].code;
         const errorMessage = err.errors[0].message;
-        
-        console.log("❌ Verification error code:", errorCode);
-        
+
         if (errorCode === 'verification_already_verified') {
-          console.log("🔄 Email already verified, checking current signup status...");
-          
-          // Check if the signup is actually complete
-          try {
-            console.log("🔍 Current signUp object:", JSON.stringify(signUp, null, 2));
-            
-            if (signUp?.status === 'complete' && signUp?.createdSessionId) {
-              console.log("✅ Found complete signup, setting session");
-              await setActive({ session: signUp.createdSessionId });
-              
-              // Create user profile with username
-              try {
-                await createUserProfile(signUp.createdUserId!, {
-                  email: email.toLowerCase().trim(),
-                  username: username.toLowerCase().trim(),
-                  displayName: username.trim(),
-                  createdAt: Date.now(),
-                });
-                console.log("✅ User profile created with username (already verified case)");
-              } catch (profileError) {
-                console.error("❌ Failed to create user profile:", profileError);
-                // Don't block signup for profile creation failure
-              }
-              
-              Alert.alert("Welcome!", "Account created successfully!", [
-                { text: "Continue", onPress: () => router.replace("/AppContent") }
-              ]);
-              return;
-            } else {
-              console.log("❌ Signup not complete despite verification");
-              Alert.alert(
-                "Verification Issue", 
-                "Your email is verified but account creation is incomplete. Please try signing up again or contact support.",
-                [
-                  { text: "Try Again", onPress: () => router.replace("/signup") },
-                  { text: "Go to Login", onPress: () => router.replace("/login") }
-                ]
-              );
-              return;
+          // if already verified, try to complete session
+          if (signUp?.status === 'complete' && signUp?.createdSessionId) {
+            await setActive({ session: signUp.createdSessionId });
+            try {
+              await createUserProfile(signUp.createdUserId!, {
+                email: email.toLowerCase().trim(),
+                username: username.toLowerCase().trim(),
+                displayName: username.trim(),
+                createdAt: Date.now(),
+              });
+            } catch (profileError) {
+              console.error('Profile creation failed:', profileError);
             }
-          } catch (sessionError) {
-            console.error("❌ Session error:", sessionError);
-            setError("Account verification completed but couldn't sign you in. Please try logging in.");
+            Alert.alert('Welcome!', 'Account created successfully!', [
+              { text: 'Continue', onPress: () => router.replace('/AppContent') },
+            ]);
+            return;
           }
+          Alert.alert(
+            'Verification Issue',
+            'Your email is verified but account creation is incomplete. Please try signing up again or contact support.',
+            [
+              { text: 'Try Again', onPress: () => router.replace('/signup') },
+              { text: 'Go to Login', onPress: () => router.replace('/login') },
+            ],
+          );
         } else {
           switch (errorCode) {
             case 'form_code_incorrect':
-              setError("Incorrect verification code. Please try again.");
+              setError('Incorrect verification code. Please try again.');
               break;
             case 'verification_expired':
-              setError("Verification code expired. Please request a new one.");
+              setError('Verification code expired. Please request a new one.');
               break;
             default:
-              setError(errorMessage || "Verification failed. Please try again.");
+              setError(errorMessage || 'Verification failed. Please try again.');
           }
         }
       } else {
-        setError("Verification failed. Please try again.");
+        setError('Verification failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -285,32 +227,35 @@ const SignupScreen: React.FC = () => {
 
   const handleResendCode = async () => {
     if (!signUp) return;
-    
     try {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      Alert.alert("Code Sent", "A new verification code has been sent to your email.");
+      Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
     } catch (err: any) {
-      console.error("Resend error:", err);
-      Alert.alert("Error", "Failed to resend code. Please try again.");
+      console.error('Resend error:', err);
+      Alert.alert('Error', 'Failed to resend code. Please try again.');
     }
+  };
+
+  const handleBack = () => {
+    router.replace('/');
   };
 
   if (verifying) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} pointerEvents="box-none">
         <TouchableOpacity style={styles.backButton} onPress={() => setVerifying(false)}>
           <Ionicons name="chevron-back" size={28} color="#de7600" />
         </TouchableOpacity>
-        
-        <View style={styles.background}>
+
+        <View style={styles.background} pointerEvents="box-none">
           <View style={styles.contentContainer}>
             <Text style={styles.header}>Verify Email</Text>
             <Text style={styles.verifyText}>
               We sent a 6-digit code to {email}. Enter it below:
             </Text>
-            
+
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            
+
             <TextInput
               style={styles.input}
               placeholder="Enter 6-digit code"
@@ -322,22 +267,18 @@ const SignupScreen: React.FC = () => {
               autoCapitalize="none"
               editable={!loading}
             />
-            
-            <TouchableOpacity 
-              style={[styles.button, (loading || !code.trim()) && { opacity: 0.6 }]} 
+
+            <TouchableOpacity
+              style={[styles.button, (loading || !code.trim()) && { opacity: 0.6 }]}
               onPress={handleVerification}
               disabled={loading || !code.trim()}
             >
               <Text style={styles.buttonText}>
-                {loading ? "Verifying..." : "Verify Email"}
+                {loading ? 'Verifying...' : 'Verify Email'}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.resendButton}
-              onPress={handleResendCode}
-              disabled={loading}
-            >
+            <TouchableOpacity style={styles.resendButton} onPress={handleResendCode} disabled={loading}>
               <Text style={styles.resendText}>Resend Code</Text>
             </TouchableOpacity>
           </View>
@@ -347,21 +288,20 @@ const SignupScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} pointerEvents="box-none">
       {/* Back arrow */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push("/")}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
         <Ionicons name="chevron-back" size={28} color="#de7600" />
       </TouchableOpacity>
-      
-      <View style={styles.background}>
 
-      {/* Centered Content */}
+      <View style={[styles.background, { paddingBottom: insets.bottom }]} pointerEvents="box-none">
+        {/* Centered Content */}
         <View style={styles.contentContainer}>
           <Text style={styles.header}>Sign up for ARIA</Text>
 
           <View style={styles.formGroup}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            
+
             {/* Username field */}
             <View style={styles.usernameContainer}>
               <Text style={styles.usernamePrefix}>@</Text>
@@ -371,10 +311,9 @@ const SignupScreen: React.FC = () => {
                 placeholderTextColor="#888"
                 value={username}
                 onChangeText={(text) => {
-                  // Clean username: only alphanumeric and underscore, lowercase
                   const cleanUsername = text.toLowerCase().replace(/[^a-z0-9_]/g, '');
                   setUsername(cleanUsername);
-                  setError("");
+                  setError('');
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -382,7 +321,7 @@ const SignupScreen: React.FC = () => {
                 maxLength={20}
               />
             </View>
-            
+
             <TextInput
               style={styles.input}
               placeholder="Email address"
@@ -390,13 +329,13 @@ const SignupScreen: React.FC = () => {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                setError("");
+                setError('');
               }}
               autoCapitalize="none"
               keyboardType="email-address"
               editable={!loading}
             />
-            
+
             <View style={styles.passwordRow}>
               <TextInput
                 style={[styles.input, { flex: 1, marginBottom: 0 }]}
@@ -406,23 +345,21 @@ const SignupScreen: React.FC = () => {
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
-                  setError("");
+                  setError('');
                 }}
                 editable={!loading}
               />
-              <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(prev => !prev)}>
-                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#888" />
+              <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword((prev) => !prev)}>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color="#888" />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
-              style={[styles.button, loading && { opacity: 0.6 }]} 
+            <TouchableOpacity
+              style={[styles.button, loading && { opacity: 0.6 }]}
               onPress={handleSignup}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>
-                {loading ? "Creating Account..." : "Create Account"}
-              </Text>
+              <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Create Account'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -434,30 +371,26 @@ const SignupScreen: React.FC = () => {
           </View>
 
           {/* Sign up with Google */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            activeOpacity={0.85}
-            onPress={handleGoogleSignUp}
-          >
+          <TouchableOpacity style={styles.googleButton} activeOpacity={0.85} onPress={handleGoogleSignUp}>
             <AntDesign name="google" size={26} color="#444" />
             <Text style={styles.googleText}>Sign up with Google</Text>
           </TouchableOpacity>
 
           <View style={styles.signUpPrompt}>
             <Text style={styles.promptText}>Already have an account?</Text>
-            <TouchableOpacity onPress={() => router.push("/login")}>
+            <TouchableOpacity onPress={() => router.push('/login')}>
               <Text style={styles.signupText}> Log In</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-        {/* Footer stays at bottom */}
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={() => router.push("/FAQ")}>
-            <Text style={styles.footerText}>Need Help?</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Footer stays at bottom — don't block edge taps */}
+      <View style={styles.footer} pointerEvents="box-none">
+        <TouchableOpacity onPress={() => router.push('/FAQ')}>
+          <Text style={styles.footerText}>Need Help?</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -467,42 +400,42 @@ export default SignupScreen;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#FFB980", 
+    backgroundColor: '#FFB980',
   },
   background: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingTop: 100,
   },
   backButton: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 48 : 28,
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 48 : 28,
     left: 10,
     zIndex: 2,
     paddingTop: 10,
   },
   contentContainer: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingHorizontal: 20,
-    width: "100%",
+    width: '100%',
   },
   header: {
     fontSize: width * 0.1,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 20,
     marginTop: 20,
-    color: "#de7600",
-    alignSelf: "center",
-    textShadowColor: "rgba(18, 17, 17, 0.23)",
+    color: '#de7600',
+    alignSelf: 'center',
+    textShadowColor: 'rgba(18, 17, 17, 0.23)',
     textShadowOffset: { width: 2, height: 2 },
     letterSpacing: 1,
   },
   passwordRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
     borderRadius: 28,
     marginBottom: 12,
   },
@@ -511,8 +444,8 @@ const styles = StyleSheet.create({
   },
   verifyText: {
     fontSize: width * 0.04,
-    color: "#666",
-    textAlign: "center",
+    color: '#666',
+    textAlign: 'center',
     marginBottom: 20,
     paddingHorizontal: 20,
   },
@@ -521,37 +454,37 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 28,
     fontSize: width * 0.04,
     paddingVertical: height * 0.018,
     paddingHorizontal: width * 0.045,
     marginBottom: 12,
-    fontWeight: "600",
-    color: "#222",
+    fontWeight: '600',
+    color: '#222',
     elevation: 1.5,
-    shadowColor: "#e4c2a6",
+    shadowColor: '#e4c2a6',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
   },
   usernameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 28,
     marginBottom: 12,
     paddingLeft: width * 0.045,
     elevation: 1.5,
-    shadowColor: "#e4c2a6",
+    shadowColor: '#e4c2a6',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
   },
   usernamePrefix: {
     fontSize: width * 0.04,
-    fontWeight: "bold",
-    color: "#de7600",
+    fontWeight: 'bold',
+    color: '#de7600',
     marginRight: 4,
   },
   usernameInput: {
@@ -565,22 +498,22 @@ const styles = StyleSheet.create({
   button: {
     width: width * 0.75,
     height: 50,
-    backgroundColor: "#FFA842",
+    backgroundColor: '#FFA842',
     borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 70,
     marginBottom: 10,
-    alignSelf: "center",
-    shadowColor: "#ffa842",
+    alignSelf: 'center',
+    shadowColor: '#ffa842',
     shadowOpacity: 0.2,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
     elevation: 4,
   },
   buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: width * 0.058,
     letterSpacing: 0.5,
   },
@@ -588,93 +521,93 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   resendText: {
-    color: "#de7600",
+    color: '#de7600',
     fontSize: width * 0.035,
-    fontWeight: "600",
-    textDecorationLine: "underline",
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   signUpPrompt: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 2,
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     marginTop: 18,
     marginLeft: width / 5,
   },
   promptText: {
-    color: "#444",
+    color: '#444',
     fontSize: width * 0.03,
-    fontWeight: "500",
-    textShadowColor: "rgba(18,17,17,0.08)",
+    fontWeight: '500',
+    textShadowColor: 'rgba(18,17,17,0.08)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
   signupText: {
-    color: "#444",
+    color: '#444',
     fontSize: width * 0.03,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     letterSpacing: 0.5,
     marginLeft: 10,
   },
   orRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginVertical: 8,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   orLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#de7600",
+    backgroundColor: '#de7600',
     marginHorizontal: 12,
     opacity: 0.6,
   },
   orText: {
-    color: "#de7600",
+    color: '#de7600',
     fontSize: width * 0.044,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
     borderRadius: 35,
     width: width * 0.75,
     height: 51,
-    alignSelf: "center",
-    justifyContent: "center",
+    alignSelf: 'center',
+    justifyContent: 'center',
     elevation: 2,
-    shadowColor: "#c1c1c1",
+    shadowColor: '#c1c1c1',
     shadowOpacity: 0.12,
     shadowRadius: 7,
     shadowOffset: { width: 0, height: 3 },
     marginTop: 10,
   },
   googleText: {
-    color: "#444",
-    fontWeight: "bold",
+    color: '#444',
+    fontWeight: 'bold',
     fontSize: width * 0.049,
     marginLeft: 13,
     letterSpacing: 0.3,
   },
   errorText: {
-    color: "#B40020",
-    fontWeight: "bold",
+    color: '#B40020',
+    fontWeight: 'bold',
     marginBottom: 10,
     fontSize: 14,
-    textAlign: "center",
+    textAlign: 'center',
   },
   footer: {
-    position: "absolute",
-    bottom: Platform.OS === "ios" ? 38 : 25,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 38 : 25,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footerText: {
     fontSize: width * 0.025,
-    color: "#444",
-    fontWeight: "800",
-    textAlign: "center",
+    color: '#444',
+    fontWeight: '800',
+    textAlign: 'center',
   },
 });

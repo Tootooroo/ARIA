@@ -4,85 +4,133 @@ import { Dimensions, ScrollView, StyleSheet, Text } from "react-native";
 const { width } = Dimensions.get("window");
 
 type AboutContentProps = {
-    noTitle?: boolean;
-  };
-  
-function PrivacyStatement({ }: AboutContentProps) {
+  noTitle?: boolean;
+};
+
+function PrivacyStatement({}: AboutContentProps) {
   return (
-    <ScrollView style={{ maxHeight: width > 480 ? 630 : 540 }}>
-
+    <ScrollView
+      style={{ maxHeight: width > 480 ? 630 : 540 }}
+      contentContainerStyle={{ padding: 26 }}
+    >
       <Text style={styles.body}>
-        Your privacy, security, and trust are at the heart of everything we do at Aria. This page explains how we handle your information and keep your data safe.
+        Your privacy, security, and trust are at the heart of everything we build in ARIA.
+        This page explains how your information is handled across Learn, Practice (simulated market + Paper Trading),
+        Journal, and Progress.
       </Text>
 
-      <Text style={styles.sectionHeader}>1. Your Conversations Are Private</Text>
+      <Text style={styles.sectionHeader}>1) Your conversations are private</Text>
       <Text style={styles.body}>
-        All chats and conversations with your AI companion are stored securely. We never sell your data or use your chat content for advertising. Your messages are only used to provide you with a better experience, improve AI accuracy, and allow you to access your own chat history.
+        We never sell your data or use your chat content for advertising. Your messages are used
+        only to provide features you enable (answers, planning, risk/sizing helpers, journaling, etc.).
+        When AI providers process text to generate replies, it is transmitted securely. We aim to minimize
+        retention and do not allow providers to use your content for their advertising.
       </Text>
 
-      <Text style={styles.sectionHeader}>2. What Information We Collect</Text>
+      <Text style={styles.sectionHeader}>2) What we collect</Text>
+      <Text style={styles.body}>We collect only what’s needed to run the app:</Text>
       <Text style={styles.body}>
-        We collect:
+        <Text style={styles.bold}>• Chat history (optional):</Text> So you can revisit prior conversations and plans.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Chat history:</Text> So you can access your previous conversations anytime, on any device.
+        <Text style={styles.bold}>• Learn & Progress state:</Text> lessons completed, quiz attempts/accuracy,
+        unique questions answered correctly, and your learning streak.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• App usage data:</Text> To understand which features are helpful, and to fix bugs or improve performance.
+        <Text style={styles.bold}>• Practice & Paper Trading:</Text> simulated orders, positions, and related settings
+        (e.g., quantity, account size, risk %, entry/stop/target) plus optional journal notes attached to trades.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Device information:</Text> Limited technical details (like device type or OS version) to make sure the app works smoothly for everyone.
+        <Text style={styles.bold}>• App usage & diagnostics:</Text> anonymized data that helps us fix bugs, improve
+        performance, and understand which features are helpful.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Optional profile info:</Text> If you choose to add your name or preferences, they are used only to personalize your experience.
-      </Text>
-
-      <Text style={styles.sectionHeader}>3. Your Data, Your Control</Text>
-      <Text style={styles.body}>
-        You can clear your chat history at any time in the app. Your account and all associated data can be deleted permanently by contacting us or using built-in app settings (coming soon). You always control your information.
-      </Text>
-
-      <Text style={styles.sectionHeader}>4. Notifications & Permissions</Text>
-      <Text style={styles.body}>
-        Notifications are optional. You can enable, disable, or customize them anytime in your device’s settings. The app will only request permissions needed to deliver features like reminders, notifications, or AI speech.
-      </Text>
-
-      <Text style={styles.sectionHeader}>5. How We Use Your Data</Text>
-      <Text style={styles.body}>
-        We use your data to:
+        <Text style={styles.bold}>• Device info (limited):</Text> e.g., OS version and basic device type for
+        compatibility and performance.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Power your personal AI experience</Text> (reminders, chat, recommendations, learning your preferences).
+        <Text style={styles.bold}>• Optional profile info:</Text> if you add a name or preferences, we use them only to
+        personalize your experience.
       </Text>
       <Text style={styles.body}>
-        <Text style={styles.bold}>• Improve app quality</Text> through bug fixes, design updates, and new features—always driven by anonymous usage data and your feedback.
-      </Text>
-      <Text style={styles.body}>
-        <Text style={styles.bold}>• Never for advertising or selling.</Text>
+        <Text style={styles.bold}>• Optional broker data (future/opt-in):</Text> if you later connect a supported broker,
+        we may access read-only balances, positions, and orders strictly to display and (if you explicitly enable it)
+        place live orders under your risk rules. Credentials/tokens are stored securely and never sold.
       </Text>
 
-      <Text style={styles.sectionHeader}>6. Secure by Design</Text>
+      <Text style={styles.sectionHeader}>3) Where your data lives</Text>
       <Text style={styles.body}>
-        All your conversations and data are encrypted in transit and stored securely using trusted cloud providers. We regularly update security protocols to keep your information safe.
+        Most state for learning and practice (e.g., paper.enabled, lesson progress, streak day) is stored on-device
+        using secure storage. Simulated market data is generated for educational practice and may be refreshed in-app.
+        If you sign in or enable cloud backup in the future, certain data may sync to our servers so it’s available
+        across devices, protected by authentication and encryption.
       </Text>
 
-      <Text style={styles.sectionHeader}>7. AI Speech & Language</Text>
+      <Text style={styles.sectionHeader}>4) Your control</Text>
       <Text style={styles.body}>
-        When you use AI voice or change the app’s language, your speech input is processed securely for the purpose of providing responses. Language selection may affect which language models are used, but your voice data is never used for any other purpose.
+        You can reset Paper Trading, clear journal notes, and (when available) delete chats and learning data from
+        within the app. You may also request full account deletion. We’ll remove associated personal data unless
+        retention is legally required (e.g., for fraud prevention or compliance if live brokerage features are enabled).
       </Text>
 
-      <Text style={styles.sectionHeader}>8. Feedback & Questions</Text>
+      <Text style={styles.sectionHeader}>5) Permissions</Text>
       <Text style={styles.body}>
-        Your feedback helps shape the future of Aria. If you have questions or want to request deletion of your data, please contact us anytime through the app or our website.
+        Notifications, microphone/voice, and similar permissions are optional and requested only when a feature needs
+        them. You can enable or disable these at any time in your device settings.
       </Text>
 
-      <Text style={styles.sectionHeader}>9. Policy Updates</Text>
+      <Text style={styles.sectionHeader}>6) How we use your data</Text>
       <Text style={styles.body}>
-        This privacy statement may be updated from time to time. We’ll always notify you of major changes and keep this page up to date, so you’re always in control.
+        <Text style={styles.bold}>• To power your experience:</Text> conversational help, simulated practice, risk
+        sizing (1R), pre-trade checks, journaling, and progress tracking.
+      </Text>
+      <Text style={styles.body}>
+        <Text style={styles.bold}>• To improve quality:</Text> bug fixes, performance, and design—guided by anonymous,
+        aggregate diagnostics and your feedback.
+      </Text>
+      <Text style={styles.body}>
+        <Text style={styles.bold}>• Never for ads or selling:</Text> we do not sell your personal data.
+      </Text>
+
+      <Text style={styles.sectionHeader}>7) Security</Text>
+      <Text style={styles.body}>
+        Data is encrypted in transit and stored using secure services. Access is limited to authorized systems and
+        personnel with a need to know. We review and update security controls on a regular cadence.
+      </Text>
+
+      <Text style={styles.sectionHeader}>8) Data retention</Text>
+      <Text style={styles.body}>
+        We retain data only as long as necessary to provide the app and comply with law. Simulated trading history and
+        learn/progress state persist until you reset or delete them. If you request deletion of your account, we remove
+        associated personal data unless retention is required by law or for security.
+      </Text>
+
+      <Text style={styles.sectionHeader}>9) Simulated vs. live trading</Text>
+      <Text style={styles.body}>
+        ARIA’s practice tools use a simulated market for education. Any future live trading integrations will be strictly
+        opt-in with explicit risk controls (e.g., 1R sizing, daily loss limits) and clear logs of actions taken. All
+        investing involves risk; no strategy or AI can guarantee profits.
+      </Text>
+
+      <Text style={styles.sectionHeader}>10) Children</Text>
+      <Text style={styles.body}>
+        The app is not intended for children under the age of 13. If we learn we’ve
+        collected personal information from a child, we’ll delete it.
+      </Text>
+
+      <Text style={styles.sectionHeader}>11) Policy updates</Text>
+      <Text style={styles.body}>
+        We may update this statement as the app evolves. We’ll notify you of material changes and keep this page current
+        so you can make informed choices.
+      </Text>
+
+      <Text style={styles.sectionHeader}>12) Contact</Text>
+      <Text style={styles.body}>
+        Questions, feedback, or data requests? Contact us through jtjrjtjr0000@gmail.com. We’re here to help.
       </Text>
 
       <Text style={styles.ending}>
-        Thank you for trusting Aria. Your privacy and peace of mind are our priority—always.
+        Thank you for trusting ARIA. Your privacy and peace of mind come first.
       </Text>
     </ScrollView>
   );
@@ -93,7 +141,7 @@ export default PrivacyStatement;
 const styles = StyleSheet.create({
   container: { padding: 26, backgroundColor: "transparent", flex: 1 },
   subtitle: { fontWeight: "bold", fontSize: 26, color: "#FFA842", marginBottom: 12, textAlign: "center" },
-  sectionHeader: { fontWeight: "bold", fontSize: 18, marginTop: 14, marginBottom: 7, color: "#FFD07B" }, // was 20/8
+  sectionHeader: { fontWeight: "bold", fontSize: 18, marginTop: 14, marginBottom: 7, color: "#FFD07B" },
   bold: { fontWeight: "bold", color: "#FFA842" },
   italic: { fontStyle: "italic", color: "#ccc" },
   body: { color: "#fff", fontSize: 15.5, lineHeight: 25, marginBottom: 9 },
