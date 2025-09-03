@@ -7,7 +7,7 @@ Learn stocks smarter with AI. Lessons, interactive practice, and real-time insig
 🚀 Overview
 
 ARIA is an AI-powered stock learning app built with Expo
- and [React Native].
+ and React Native.
 Our mission is to make learning about stocks and investing accessible, interactive, and personalized.
 
 With ARIA, you don’t just read about the market – you practice, quiz, and interact with an AI mentor that adapts to your learning pace.
