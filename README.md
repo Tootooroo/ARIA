@@ -60,6 +60,6 @@ npx expo start --clear
 
 
 
-📜 License
+# 📜 License
 Copyright © 2025 [Tootooroo].  
 All rights reserved. This project is proprietary and may not be used, copied, modified, or distributed without explicit permission.
