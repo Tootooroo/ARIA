@@ -49,7 +49,7 @@ npm install
 npx expo start --clear
 
 
-Open the app in:
+## Open the app in:
 
 📱 iOS Simulator
 
