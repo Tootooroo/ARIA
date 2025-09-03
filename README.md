@@ -1,51 +1,105 @@
-# Welcome to your Expo app 👋
+📈 ARIA – AI-Powered Trading Education App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Learn stocks smarter with AI. Lessons, interactive practice, and real-time insights – all in one app.
 
-## Get started
+![aria_sleep](https://github.com/user-attachments/assets/70722776-7e7a-4e48-9a22-44165ab92b0c)
 
-1. Install dependencies
+🚀 Overview
 
-   ```bash
-   npm install
-   ```
+ARIA is an AI-powered stock learning app built with Expo
+ and [React Native].
+Our mission is to make learning about stocks and investing accessible, interactive, and personalized.
 
-2. Start the app
+With ARIA, you don’t just read about the market – you practice, quiz, and interact with an AI mentor that adapts to your learning pace.
 
-   ```bash
-   npx expo start
-   ```
+✨ Features
 
-In the output, you'll find options to open the app in a
+🤖 AI Tutor – Ask questions about stocks, trading terms, or strategies.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+📚 Interactive Lessons – Bite-sized learning modules designed for beginners.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+🎯 Personalized Quizzes – Reinforce knowledge with adaptive practice.
 
-## Get a fresh project
+📊 Real-time Examples – Learn with market-relevant scenarios.
 
-When you're ready, run:
+🌐 Cross-Platform – Works on iOS, Android, and Web (via Expo).
 
-```bash
-npm run reset-project
-```
+🛠️ Tech Stack
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Frontend: React Native + Expo Router
 
-## Learn more
+AI Integration: OpenAI API
 
-To learn more about developing your project with Expo, look at the following resources:
+Authentication: Firebase Auth
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Backend / Data: Firebase + Cloud Firestore
 
-## Join the community
+Payments (Future): Stripe / In-app purchases
 
-Join our community of developers creating universal apps.
+📲 Getting Started
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# ARIA_APP2
+Clone and run the project locally:
+
+# Clone repository
+git clone https://github.com/yourusername/aria-app.git
+cd aria-app
+
+# Install dependencies
+npm install
+
+# Start development server
+npx expo start
+
+
+Open the app in:
+
+📱 iOS Simulator
+
+🤖 Android Emulator
+
+🌍 Expo Go (scan QR code)
+
+📸 Screenshots
+Home	Lesson	Quiz	AI Chat
+
+	
+	
+	
+
+(Replace placeholders with actual screenshots)
+
+🗺️ Roadmap
+
+ Add gamification (XP, badges, streaks)
+
+ Expand AI explanations with charts
+
+ Offline mode for lessons
+
+ Advanced modules for intermediate learners
+
+ Launch on App Store / Google Play
+
+🤝 Contributing
+
+We welcome contributions! 🎉
+
+Fork the repo
+
+Create a feature branch (git checkout -b feature-name)
+
+Commit changes (git commit -m "Added new feature")
+
+Push to branch (git push origin feature-name)
+
+Open a Pull Request
+
+📜 License
+
+MIT License © 2025 [Your Name]
+
+🌟 Support
+
+If you like this project, please ⭐ the repo to support development.
+For feedback or feature requests, open an issue
+.
