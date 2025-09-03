@@ -30,25 +30,23 @@ Frontend: React Native + Expo Router
 
 AI Integration: OpenAI API
 
-Authentication: Firebase Auth
+Authentication: Clerk Auth
 
 Backend / Data: Firebase + Cloud Firestore
-
-Payments (Future): Stripe / In-app purchases
 
 📲 Getting Started
 
 Clone and run the project locally:
 
 # Clone repository
-git clone https://github.com/yourusername/aria-app.git
+git clone https://github.com/tootooroo/aria-app.git
 cd aria-app
 
 # Install dependencies
 npm install
 
 # Start development server
-npx expo start
+npx expo start --clear
 
 
 Open the app in:
@@ -59,47 +57,9 @@ Open the app in:
 
 🌍 Expo Go (scan QR code)
 
-📸 Screenshots
-Home	Lesson	Quiz	AI Chat
 
-	
-	
-	
 
-(Replace placeholders with actual screenshots)
-
-🗺️ Roadmap
-
- Add gamification (XP, badges, streaks)
-
- Expand AI explanations with charts
-
- Offline mode for lessons
-
- Advanced modules for intermediate learners
-
- Launch on App Store / Google Play
-
-🤝 Contributing
-
-We welcome contributions! 🎉
-
-Fork the repo
-
-Create a feature branch (git checkout -b feature-name)
-
-Commit changes (git commit -m "Added new feature")
-
-Push to branch (git push origin feature-name)
-
-Open a Pull Request
 
 📜 License
-
-MIT License © 2025 [Your Name]
-
-🌟 Support
-
-If you like this project, please ⭐ the repo to support development.
-For feedback or feature requests, open an issue
-.
+Copyright © 2025 [Tootooroo].  
+All rights reserved. This project is proprietary and may not be used, copied, modified, or distributed without explicit permission.
