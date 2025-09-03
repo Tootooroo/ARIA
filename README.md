@@ -38,14 +38,14 @@ Backend / Data: Firebase + Cloud Firestore
 
 Clone and run the project locally:
 
-# Clone repository
+Clone repository
 git clone https://github.com/tootooroo/aria-app.git
 cd aria-app
 
-# Install dependencies
+Install dependencies
 npm install
 
-# Start development server
+Start development server
 npx expo start --clear
 
 
