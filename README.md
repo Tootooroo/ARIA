@@ -4,7 +4,7 @@ Learn stocks smarter with AI. Lessons, interactive practice, and real-time insig
 
 ![aria_sleep](https://github.com/user-attachments/assets/70722776-7e7a-4e48-9a22-44165ab92b0c)
 
-🚀 Overview
+# 🚀 Overview
 
 ARIA is an AI-powered stock learning app built with Expo
  and React Native.
@@ -12,7 +12,7 @@ Our mission is to make learning about stocks and investing accessible, interacti
 
 With ARIA, you don’t just read about the market – you practice, quiz, and interact with an AI mentor that adapts to your learning pace.
 
-✨ Features
+# ✨ Features
 
 🤖 AI Tutor – Ask questions about stocks, trading terms, or strategies.
 
@@ -24,7 +24,7 @@ With ARIA, you don’t just read about the market – you practice, quiz, and in
 
 🌐 Cross-Platform – Works on iOS, Android, and Web (via Expo).
 
-🛠️ Tech Stack
+# 🛠️ Tech Stack
 
 Frontend: React Native + Expo Router
 
@@ -34,7 +34,7 @@ Authentication: Clerk Auth
 
 Backend / Data: Firebase + Cloud Firestore
 
-📲 Getting Started
+# 📲 Getting Started
 
 Clone and run the project locally:
 
