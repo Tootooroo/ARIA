@@ -38,7 +38,7 @@ Backend / Data: Firebase + Cloud Firestore
 
 Clone and run the project locally:
 
-Clone repository
+## Clone repository
 git clone https://github.com/tootooroo/aria-app.git
 cd aria-app
 
