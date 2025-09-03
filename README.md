@@ -42,10 +42,10 @@ Clone and run the project locally:
 git clone https://github.com/tootooroo/aria-app.git
 cd aria-app
 
-Install dependencies
+## Install dependencies
 npm install
 
-Start development server
+## Start development server
 npx expo start --clear
 
 
