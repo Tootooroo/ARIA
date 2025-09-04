@@ -12,6 +12,8 @@ Our mission is to make learning about stocks and investing accessible, interacti
 
 With ARIA, you don’t just read about the market – you practice, quiz, and interact with an AI mentor that adapts to your learning pace.
 
+The app screens as well as a walkthrough video can be viewed in the aria_app_versions folder.
+
 # ✨ Features
 
 🤖 AI Tutor – Ask questions about stocks, trading terms, or strategies.
