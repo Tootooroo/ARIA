@@ -1,4 +1,4 @@
-📈 ARIA – AI-Powered Trading Education App
+# 📈 ARIA – AI-Powered Trading Education App
 
 Learn stocks smarter with AI. Lessons, interactive practice, and real-time insights – all in one app.
 
